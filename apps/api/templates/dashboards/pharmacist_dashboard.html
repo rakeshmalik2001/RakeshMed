@@ -1,0 +1,142 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Pharmacist Dashboard | RakeshMed{% endblock %}
+
+{% block extra_head %}
+<style>
+    .rx-hero {
+        background:
+            radial-gradient(circle at top right, rgba(255, 123, 84, 0.18), transparent 28%),
+            linear-gradient(135deg, #ffffff 0%, #f4fbff 100%);
+    }
+    .section-kicker { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--portal-accent); font-weight: 700; }
+    .queue-row, .alert-row { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 1.1rem; border-top: 1px solid var(--portal-line); }
+    .queue-row:first-child, .alert-row:first-child { border-top: 0; }
+    .panel-shell { border: 1px solid var(--portal-line); border-radius: 1rem; background: #fff; overflow: hidden; }
+    .status-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: .28rem .65rem; background: rgba(31, 122, 140, 0.1); color: var(--portal-accent); font-size: .8rem; font-weight: 700; }
+    .status-pill.warning { background: rgba(255, 123, 84, 0.14); color: #c85b3a; }
+    .meta { color: #6f7f8a; font-size: .92rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid portal-shell py-4">
+    <div class="row g-4">
+        <div class="col-xl-3">
+            <div class="dashboard-card p-4 h-100">
+                <div class="brand-pill mb-4"><i class="bi bi-heart-pulse"></i> Pharmacist Console</div>
+                <div class="nav flex-column gap-2">
+                    {% for item in role_sidebar %}
+                        <a class="sidebar-link" href="{{ item.url }}">
+                            <i class="bi bi-{{ item.icon }}"></i>
+                            <span>{{ item.label }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{% url 'logout' %}" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-xl-9">
+            <section class="dashboard-card rx-hero p-4 p-md-5 mb-4">
+                <div class="brand-pill mb-3"><i class="bi bi-clipboard2-pulse"></i> Clinical Workflow</div>
+                <h1 class="display-6 fw-semibold mb-2">Work the prescription queue with priority and clarity.</h1>
+                <p class="lead text-secondary mb-4">This pharmacist dashboard focuses on queue pressure, recent clinical decisions, and unread alerts so you can move through reviews with less hunting.</p>
+                <div class="row g-3">
+                    {% for metric in metrics %}
+                        <div class="col-md-3 col-6">
+                            <div class="metric-tile h-100">
+                                <div class="text-secondary small text-uppercase">{{ metric.label }}</div>
+                                <div class="display-6 fw-semibold">{{ metric.value }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4">
+                    <section id="queue" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Queue Health</div>
+                        <h2 class="h5 mb-3">Review summary</h2>
+                        <div class="row g-3">
+                            {% for item in review_summary %}
+                                <div class="col-6">
+                                    <div class="metric-tile h-100">
+                                        <div class="text-secondary small text-uppercase">{{ item.label }}</div>
+                                        <div class="display-6 fw-semibold">{{ item.value }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-8">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Pending Reviews</div>
+                        <h2 class="h5 mb-3">Who needs a decision now</h2>
+                        <div class="panel-shell">
+                            {% for prescription in review_queue %}
+                                <div class="queue-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ prescription.reference_code }} • {{ prescription.patient_name }}</div>
+                                        <div class="meta">{{ prescription.user.full_name|default:prescription.user.phone_number }} • {{ prescription.created_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if prescription.review_priority == 'urgent' or prescription.review_priority == 'high' %}warning{% endif %}">
+                                        {{ prescription.review_priority|title }}
+                                    </span>
+                                </div>
+                            {% empty %}
+                                <div class="queue-row"><div class="meta">No pending prescription reviews right now.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <section id="approvals" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Recent Decisions</div>
+                        <h2 class="h5 mb-3">Latest resolved prescription work</h2>
+                        <div class="panel-shell">
+                            {% for prescription in recent_decisions %}
+                                <div class="queue-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ prescription.reference_code }} • {{ prescription.patient_name }}</div>
+                                        <div class="meta">{{ prescription.updated_at|date:"d M Y, H:i" }}{% if prescription.reviewed_by %} • by {{ prescription.reviewed_by.full_name|default:prescription.reviewed_by.phone_number }}{% endif %}</div>
+                                    </div>
+                                    <span class="status-pill">{{ prescription.get_status_display }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="queue-row"><div class="meta">No recent review decisions yet.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-5">
+                    <section id="alerts" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Alerts</div>
+                        <h2 class="h5 mb-3">Unread pharmacist-facing notifications</h2>
+                        <div class="panel-shell">
+                            {% for alert in alerts %}
+                                <div class="alert-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ alert.title }}</div>
+                                        <div class="meta">{{ alert.body|truncatechars:90 }}</div>
+                                        <div class="meta">{{ alert.created_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="alert-row"><div class="meta">No unread alerts right now.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

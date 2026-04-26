@@ -1,0 +1,53 @@
+{% extends "portal/base.html" %}
+
+{% block title %}{{ dashboard.title }} | RakeshMed{% endblock %}
+
+{% block content %}
+<div class="container-fluid portal-shell py-4">
+    <div class="row g-4">
+        <div class="col-xl-3">
+            <div class="dashboard-card p-4 h-100">
+                <div class="brand-pill mb-4"><i class="bi bi-hospital"></i> {{ current_role|title }} Portal</div>
+                <div class="nav flex-column gap-2">
+                    {% for item in role_sidebar %}
+                        <a class="sidebar-link" href="{{ item.url }}">
+                            <i class="bi bi-{{ item.icon }}"></i>
+                            <span>{{ item.label }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{% url 'logout' %}" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-xl-9">
+            <div class="dashboard-card p-4 p-md-5 mb-4">
+                <h1 class="display-6 fw-semibold mb-2">{{ dashboard.title }}</h1>
+                <p class="lead text-secondary mb-0">{{ dashboard.subtitle }}</p>
+            </div>
+            <div class="row g-3 mb-4">
+                {% for metric in metrics %}
+                    <div class="col-md-6 col-xxl-3">
+                        <div class="metric-tile h-100">
+                            <div class="text-secondary small text-uppercase">{{ metric.label }}</div>
+                            <div class="display-6 fw-semibold">{{ metric.value }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="row g-3">
+                {% for module in dashboard.modules %}
+                    <div class="col-md-6">
+                        <section class="dashboard-card p-4 h-100" id="{{ module.title|slugify }}">
+                            <h2 class="h5">{{ module.title }}</h2>
+                            <p class="text-secondary mb-0">{{ module.text }}</p>
+                        </section>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

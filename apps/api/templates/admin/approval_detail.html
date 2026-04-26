@@ -1,0 +1,202 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<section class="dashboard-shell">
+  <section class="dashboard-hero">
+    <div class="dashboard-hero-copy">
+      <p class="admin-page-eyebrow">Access Governance</p>
+      <h1>Approval Request Detail</h1>
+      <p>Review request evidence, document verification, and the full audit history for this operator account.</p>
+      <div class="dashboard-role-badges">
+        <span>{{ target_user.get_role_display }}</span>
+        <span>{{ target_user.get_approval_status_display }}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="dashboard-grid">
+    <div class="dashboard-column dashboard-column--wide">
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>{{ target_user.full_name|default:"Applicant profile" }}</h2>
+            <p>{{ target_user.email|default:"No email provided" }} | {{ target_user.phone_number }}</p>
+          </div>
+          <a href="{% url 'admin-approval-queue' %}">Back to queue</a>
+        </header>
+        <div style="display:grid; gap:1rem; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));">
+          <div style="padding:1rem; border:1px solid rgba(0,0,0,.08); border-radius:.75rem;">
+            <h3 style="margin-top:0;">Compliance Details</h3>
+            {% if target_user.role == "vendor" %}
+              <p><strong>Business:</strong> {{ target_user.business_name|default:"Not provided" }}</p>
+              <p><strong>License number:</strong> {{ target_user.vendor_license_number|default:"Not provided" }}</p>
+              <p><strong>Document status:</strong> {{ target_user.get_vendor_license_document_status_display }}</p>
+              <p>
+                <strong>Proof file:</strong>
+                {% if target_user.vendor_license_document %}
+                  <a href="{% url 'admin-approval-document-download' target_user.pk 'vendor' %}">Download vendor proof</a>
+                {% else %}
+                  No document uploaded
+                {% endif %}
+              </p>
+            {% elif target_user.role == "pharmacist" %}
+              <p><strong>Registration number:</strong> {{ target_user.pharmacist_registration_number|default:"Not provided" }}</p>
+              <p><strong>Document status:</strong> {{ target_user.get_pharmacist_registration_document_status_display }}</p>
+              <p>
+                <strong>Proof file:</strong>
+                {% if target_user.pharmacist_registration_document %}
+                  <a href="{% url 'admin-approval-document-download' target_user.pk 'pharmacist' %}">Download pharmacist proof</a>
+                {% else %}
+                  No document uploaded
+                {% endif %}
+              </p>
+            {% endif %}
+            <p><strong>Requested:</strong> {{ target_user.created_at|date:"d M Y, h:i A" }}</p>
+          </div>
+
+          <div style="padding:1rem; border:1px solid rgba(0,0,0,.08); border-radius:.75rem;">
+            <h3 style="margin-top:0;">Review State</h3>
+            <p><strong>Approval status:</strong> {{ target_user.get_approval_status_display }}</p>
+            <p><strong>Assigned reviewer:</strong> {{ target_user.approval_assignee_label }}</p>
+            <p><strong>Assigned at:</strong> {{ target_user.approval_assigned_at|date:"d M Y, h:i A"|default:"Not assigned yet" }}</p>
+            <p>
+              <strong>SLA:</strong>
+              {% if target_user.approval_sla_state_value == "overdue" %}
+                Overdue
+              {% elif target_user.approval_sla_state_value == "on_track" %}
+                On track
+              {% else %}
+                Resolved
+              {% endif %}
+            </p>
+            <p><strong>Due by:</strong> {{ target_user.approval_due_label }}</p>
+            <p><strong>Documents ready:</strong> {% if target_user.documents_ready_for_approval %}Yes{% else %}No{% endif %}</p>
+            <p><strong>Last note:</strong> {{ target_user.approval_notes|default:"No notes recorded yet." }}</p>
+            <p><strong>Reviewed by:</strong> {{ target_user.approval_reviewed_by|default:"Not reviewed yet" }}</p>
+            <p><strong>Reviewed at:</strong> {{ target_user.approval_reviewed_at|date:"d M Y, h:i A"|default:"Not reviewed yet" }}</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="dashboard-panel" style="margin-top:1.5rem;">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Assignment</h2>
+            <p>Route the request to a reviewer and keep ownership visible while it is pending.</p>
+          </div>
+        </header>
+        <div style="display:grid; gap:1rem; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));">
+          <form method="post" style="padding:1rem; border:1px solid rgba(0,0,0,.08); border-radius:.75rem;">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" value="{{ target_user.pk }}">
+            <input type="hidden" name="next" value="{% url 'admin-approval-detail' target_user.pk %}">
+            <input type="hidden" name="assignment_action" value="claim">
+            <h3 style="margin-top:0;">Claim review</h3>
+            <p>Assign this approval request to your own review queue.</p>
+            <button type="submit" class="button">Claim review</button>
+          </form>
+
+          <form method="post" style="padding:1rem; border:1px solid rgba(0,0,0,.08); border-radius:.75rem;">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" value="{{ target_user.pk }}">
+            <input type="hidden" name="next" value="{% url 'admin-approval-detail' target_user.pk %}">
+            <input type="hidden" name="assignment_action" value="assign">
+            <h3 style="margin-top:0;">Assign reviewer</h3>
+            <select name="assigned_reviewer_id" style="width:100%; margin-bottom:.75rem;">
+              {% for reviewer in reviewers %}
+              <option value="{{ reviewer.pk }}" {% if target_user.approval_assigned_to_id == reviewer.pk %}selected{% endif %}>{{ reviewer }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="button">Assign reviewer</button>
+          </form>
+
+          {% if target_user.approval_assigned_to %}
+          <form method="post" style="padding:1rem; border:1px solid rgba(0,0,0,.08); border-radius:.75rem;">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" value="{{ target_user.pk }}">
+            <input type="hidden" name="next" value="{% url 'admin-approval-detail' target_user.pk %}">
+            <input type="hidden" name="assignment_action" value="unassign">
+            <h3 style="margin-top:0;">Unassign review</h3>
+            <p>Clear the current owner and return this request to the shared pool.</p>
+            <button type="submit" class="button">Unassign</button>
+          </form>
+          {% endif %}
+        </div>
+      </article>
+
+      <article class="dashboard-panel" style="margin-top:1.5rem;">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Decision Actions</h2>
+            <p>Each action updates the audit trail and notifies the user when approval status changes.</p>
+          </div>
+        </header>
+        <div style="display:grid; gap:1rem; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));">
+          <form method="post" style="padding:1rem; border:1px solid rgba(0,0,0,.08); border-radius:.75rem;">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" value="{{ target_user.pk }}">
+            <input type="hidden" name="next" value="{% url 'admin-approval-detail' target_user.pk %}">
+            <input type="hidden" name="decision" value="approved">
+            <h3 style="margin-top:0;">Approve account</h3>
+            <textarea name="approval_notes" rows="3" style="width:100%; margin-bottom:.75rem;" placeholder="Optional approval note"></textarea>
+            <button type="submit" class="button default">Approve</button>
+          </form>
+
+          <form method="post" style="padding:1rem; border:1px solid rgba(0,0,0,.08); border-radius:.75rem;">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" value="{{ target_user.pk }}">
+            <input type="hidden" name="next" value="{% url 'admin-approval-detail' target_user.pk %}">
+            <input type="hidden" name="document_kind" value="{% if target_user.role == 'vendor' %}vendor{% else %}pharmacist{% endif %}">
+            <input type="hidden" name="document_decision" value="verified">
+            <h3 style="margin-top:0;">Verify document</h3>
+            <textarea name="approval_notes" rows="3" style="width:100%; margin-bottom:.75rem;" placeholder="Verification note"></textarea>
+            <button type="submit" class="button">Verify document</button>
+          </form>
+
+          <form method="post" style="padding:1rem; border:1px solid rgba(0,0,0,.08); border-radius:.75rem;">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" value="{{ target_user.pk }}">
+            <input type="hidden" name="next" value="{% url 'admin-approval-detail' target_user.pk %}">
+            <input type="hidden" name="document_kind" value="{% if target_user.role == 'vendor' %}vendor{% else %}pharmacist{% endif %}">
+            <input type="hidden" name="document_decision" value="rejected">
+            <h3 style="margin-top:0;">Reject document</h3>
+            <textarea name="approval_notes" rows="3" style="width:100%; margin-bottom:.75rem;" placeholder="Document rejection note"></textarea>
+            <button type="submit" class="button">Reject document</button>
+          </form>
+
+          <form method="post" style="padding:1rem; border:1px solid rgba(0,0,0,.08); border-radius:.75rem;">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" value="{{ target_user.pk }}">
+            <input type="hidden" name="next" value="{% url 'admin-approval-detail' target_user.pk %}">
+            <input type="hidden" name="decision" value="rejected">
+            <h3 style="margin-top:0;">Reject account</h3>
+            <textarea name="approval_notes" rows="3" style="width:100%; margin-bottom:.75rem;" placeholder="Optional rejection reason"></textarea>
+            <button type="submit" class="button">Reject</button>
+          </form>
+        </div>
+      </article>
+
+      <article class="dashboard-panel" style="margin-top:1.5rem;">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Audit Timeline</h2>
+            <p>Chronological review of uploaded evidence, verification steps, and final decisions.</p>
+          </div>
+        </header>
+        {% if target_user.approval_timeline %}
+          <div style="display:grid; gap:.75rem;">
+            {% for item in target_user.approval_timeline %}
+            <div style="padding:.85rem 1rem; border:1px solid rgba(0,0,0,.08); border-radius:.75rem;">
+              <strong style="display:block; margin-bottom:.35rem;">{{ item.message }}</strong>
+              <span style="display:block; font-size:.9em;">{{ item.actor_label }} | {{ item.timestamp }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="dashboard-empty-state">No approval activity has been recorded yet.</p>
+        {% endif %}
+      </article>
+    </div>
+  </section>
+</section>
+{% endblock %}

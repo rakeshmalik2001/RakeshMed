@@ -1,0 +1,14 @@
+Hello {{ user_obj.full_name|default:user_obj.email|default:user_obj.phone_number }},
+
+Your RakeshMed account approval status is now: {{ user_obj.get_approval_status_display }}.
+
+{% if user_obj.approval_status == "approved" %}
+You can now sign in at /login/.
+{% else %}
+If you believe this was a mistake, please contact support or an administrator.
+{% endif %}
+{% if user_obj.approval_notes %}
+
+Reviewer note:
+{{ user_obj.approval_notes }}
+{% endif %}

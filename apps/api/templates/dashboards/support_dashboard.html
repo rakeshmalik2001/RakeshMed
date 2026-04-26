@@ -1,0 +1,159 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Support Dashboard | RakeshMed{% endblock %}
+
+{% block extra_head %}
+<style>
+    .support-hero {
+        background:
+            radial-gradient(circle at top right, rgba(111, 66, 193, 0.14), transparent 30%),
+            radial-gradient(circle at bottom left, rgba(32, 201, 151, 0.12), transparent 34%),
+            linear-gradient(135deg, #ffffff 0%, #fbfaff 100%);
+    }
+    .section-kicker { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--portal-accent); font-weight: 700; }
+    .panel-shell { border: 1px solid var(--portal-line); border-radius: 1rem; overflow: hidden; background: #fff; }
+    .panel-row { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 1.1rem; border-top: 1px solid var(--portal-line); }
+    .panel-row:first-child { border-top: 0; }
+    .meta { color: #6f7f8a; font-size: .92rem; }
+    .status-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: .28rem .65rem; background: rgba(111, 66, 193, 0.1); color: #6f42c1; font-size: .8rem; font-weight: 700; }
+    .status-pill.warning { background: rgba(246, 173, 85, 0.18); color: #b96a13; }
+    .status-pill.danger { background: rgba(229, 62, 62, 0.12); color: #c53030; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid portal-shell py-4">
+    <div class="row g-4">
+        <div class="col-xl-3">
+            <div class="dashboard-card p-4 h-100">
+                <div class="brand-pill mb-4"><i class="bi bi-headset"></i> Support Console</div>
+                <div class="nav flex-column gap-2">
+                    {% for item in role_sidebar %}
+                        <a class="sidebar-link" href="{{ item.url }}">
+                            <i class="bi bi-{{ item.icon }}"></i>
+                            <span>{{ item.label }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{% url 'logout' %}" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-xl-9">
+            <section class="dashboard-card support-hero p-4 p-md-5 mb-4">
+                <div class="brand-pill mb-3"><i class="bi bi-life-preserver"></i> Support Operations</div>
+                <h1 class="display-6 fw-semibold mb-2">Understand customer, prescription, and order activity before every response.</h1>
+                <p class="lead text-secondary mb-4">This dashboard helps support teams quickly read the latest customer signals, order movement, prescription state, and notification pressure without hopping across multiple tools.</p>
+                <div class="row g-3">
+                    {% for metric in metrics %}
+                        <div class="col-md-3 col-6">
+                            <div class="metric-tile h-100">
+                                <div class="text-secondary small text-uppercase">{{ metric.label }}</div>
+                                <div class="display-6 fw-semibold">{{ metric.value }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="section-kicker mb-2">Quick Actions</div>
+                <div class="row g-3">
+                    {% for action in quick_actions %}
+                        <div class="col-md-4">
+                            <a class="action-tile h-100" href="{{ action.url }}">
+                                <div>
+                                    <div class="fw-semibold">{{ action.label }}</div>
+                                    <div class="text-secondary small">Open the linked support-facing tool.</div>
+                                </div>
+                                <i class="bi bi-{{ action.icon }} fs-4 text-primary"></i>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4">
+                    <section id="customer-signals" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Customer Signals</div>
+                        <h2 class="h5 mb-3">Account health snapshot</h2>
+                        <div class="row g-3">
+                            {% for item in customer_signals %}
+                                <div class="col-6">
+                                    <div class="metric-tile h-100">
+                                        <div class="text-secondary small text-uppercase">{{ item.label }}</div>
+                                        <div class="display-6 fw-semibold">{{ item.value }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-8">
+                    <section id="orders" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Orders</div>
+                        <h2 class="h5 mb-3">Latest order activity</h2>
+                        <div class="panel-shell">
+                            {% for order in recent_orders %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ order.order_number }}</div>
+                                        <div class="meta">{{ order.user.full_name|default:order.user.phone_number }} • {{ order.created_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill">{{ order.get_status_display|default:order.status }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No recent orders available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <section id="prescriptions" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Prescriptions</div>
+                        <h2 class="h5 mb-3">Recent prescription activity</h2>
+                        <div class="panel-shell">
+                            {% for prescription in recent_prescriptions %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ prescription.prescription_number|default:"Prescription" }}</div>
+                                        <div class="meta">{{ prescription.user.full_name|default:prescription.user.phone_number }} • {{ prescription.updated_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if prescription.status == 'clarification_required' %}warning{% elif prescription.status == 'rejected' %}danger{% endif %}">{{ prescription.get_status_display|default:prescription.status }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No prescription activity available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-6">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Notifications</div>
+                        <h2 class="h5 mb-3">Latest alerts</h2>
+                        <div class="panel-shell">
+                            {% for notification in recent_notifications %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ notification.title|default:"Notification" }}</div>
+                                        <div class="meta">{{ notification.created_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if notification.is_read %}warning{% endif %}">{{ notification.kind|default:"update"|title }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No notification alerts available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

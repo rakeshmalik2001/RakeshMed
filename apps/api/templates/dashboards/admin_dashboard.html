@@ -1,0 +1,413 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Admin Dashboard | RakeshMed{% endblock %}
+
+{% block extra_head %}
+<style>
+    .admin-hero {
+        background:
+            radial-gradient(circle at top right, rgba(255, 123, 84, 0.20), transparent 28%),
+            linear-gradient(135deg, #153243 0%, #1f7a8c 100%);
+        color: #fff;
+    }
+    .admin-hero .brand-pill {
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.18);
+        color: #fff;
+    }
+    .action-tile {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.1rem;
+        border: 1px solid var(--portal-line);
+        border-radius: 1rem;
+        background: #fff;
+        text-decoration: none;
+        color: var(--portal-ink);
+    }
+    .action-tile:hover {
+        border-color: rgba(31, 122, 140, 0.28);
+        box-shadow: 0 .85rem 1.5rem rgba(21, 50, 67, 0.08);
+    }
+    .section-kicker {
+        font-size: .75rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--portal-accent);
+        font-weight: 700;
+    }
+    .snapshot-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+    }
+    .snapshot-card {
+        border: 1px solid var(--portal-line);
+        border-radius: 1rem;
+        padding: 1rem;
+        background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(238,246,251,.75) 100%);
+    }
+    .snapshot-card .value {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        margin: .55rem 0 .4rem;
+    }
+    .list-shell {
+        border: 1px solid var(--portal-line);
+        border-radius: 1rem;
+        overflow: hidden;
+        background: #fff;
+    }
+    .list-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.1rem;
+        border-top: 1px solid var(--portal-line);
+    }
+    .list-row:first-child {
+        border-top: 0;
+    }
+    .list-title {
+        font-weight: 600;
+    }
+    .list-meta {
+        color: #667785;
+        font-size: .92rem;
+    }
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        border-radius: 999px;
+        padding: .28rem .65rem;
+        font-size: .78rem;
+        font-weight: 700;
+        text-transform: capitalize;
+        background: rgba(31, 122, 140, 0.1);
+        color: var(--portal-accent);
+    }
+    .status-pill.warning {
+        background: rgba(255, 123, 84, 0.14);
+        color: #cc5c3b;
+    }
+    .status-pill.danger {
+        background: rgba(184, 37, 37, 0.12);
+        color: #a62222;
+    }
+    .mini-table {
+        width: 100%;
+        margin: 0;
+    }
+    .mini-table td, .mini-table th {
+        padding: .85rem 1rem;
+        border-color: var(--portal-line);
+        vertical-align: top;
+    }
+    .mini-table th {
+        font-size: .8rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #617482;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid portal-shell py-4">
+    <div class="row g-4">
+        <div class="col-xl-3">
+            <div class="dashboard-card p-4 h-100">
+                <div class="brand-pill mb-4"><i class="bi bi-speedometer2"></i> Admin Operations</div>
+                <div class="nav flex-column gap-2">
+                    {% for item in role_sidebar %}
+                        <a class="sidebar-link" href="{{ item.url }}">
+                            <i class="bi bi-{{ item.icon }}"></i>
+                            <span>{{ item.label }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{% url 'logout' %}" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-xl-9">
+            <section class="dashboard-card admin-hero p-4 p-md-5 mb-4">
+                <div class="brand-pill mb-3"><i class="bi bi-shield-check"></i> Admin Control Center</div>
+                <div class="row g-4 align-items-end">
+                    <div class="col-lg-8">
+                        <h1 class="display-6 fw-semibold mb-2">Run approvals, users, and pharmacy operations from one place.</h1>
+                        <p class="mb-0 opacity-75">This admin dashboard is for day-to-day execution: clear pending approvals, watch prescription and order pressure, and catch risky account activity before it turns into support debt.</p>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="snapshot-grid">
+                            {% for metric in metrics|slice:":4" %}
+                                <div class="snapshot-card">
+                                    <div class="small text-uppercase opacity-75">{{ metric.label }}</div>
+                                    <div class="value">{{ metric.value }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="section-kicker mb-2">Quick Actions</div>
+                <div class="row g-3">
+                    {% for action in quick_actions %}
+                        <div class="col-md-4">
+                            <a class="action-tile h-100" href="{{ action.url }}">
+                                <div>
+                                    <div class="fw-semibold">{{ action.label }}</div>
+                                    <div class="text-secondary small">Jump directly into the operational tool.</div>
+                                </div>
+                                <i class="bi bi-{{ action.icon }} fs-4 text-primary"></i>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section id="operations" class="dashboard-card p-4 p-md-5 mb-4">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+                    <div>
+                        <div class="section-kicker">Operations</div>
+                        <h2 class="h4 mb-1">Workflow pressure at a glance</h2>
+                        <p class="text-secondary mb-0">See where approvals, orders, and prescriptions are piling up before they become customer-facing issues.</p>
+                    </div>
+                </div>
+                <div class="row g-4">
+                    <div class="col-lg-6" id="approvals">
+                        <h3 class="h6 mb-3">Approval queue</h3>
+                        <div class="snapshot-grid">
+                            {% for item in approval_snapshot %}
+                                <div class="snapshot-card">
+                                    <div class="small text-uppercase text-secondary">{{ item.label }}</div>
+                                    <div class="value">{{ item.value }}</div>
+                                    <div class="small text-secondary">{{ item.hint }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <h3 class="h6 mb-3">Orders</h3>
+                        <div class="snapshot-grid">
+                            {% for item in order_snapshot %}
+                                <div class="snapshot-card">
+                                    <div class="small text-uppercase text-secondary">{{ item.label }}</div>
+                                    <div class="value">{{ item.value }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <h3 class="h6 mb-3">Prescriptions</h3>
+                        <div class="snapshot-grid">
+                            {% for item in prescription_snapshot %}
+                                <div class="snapshot-card">
+                                    <div class="small text-uppercase text-secondary">{{ item.label }}</div>
+                                    <div class="value">{{ item.value }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="users" class="dashboard-card p-4 p-md-5 mb-4">
+                <div class="row g-4">
+                    <div class="col-lg-5">
+                        <div class="section-kicker">Users</div>
+                        <h2 class="h4 mb-2">Access and approval health</h2>
+                        <p class="text-secondary">Track who needs review, which accounts are blocked, and whether your admin bench is keeping up.</p>
+                        <div class="snapshot-grid mt-4">
+                            {% for item in account_health %}
+                                <div class="snapshot-card">
+                                    <div class="small text-uppercase text-secondary">{{ item.label }}</div>
+                                    <div class="value">{{ item.value }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="section-kicker">Pending approvals</div>
+                                <h3 class="h5 mb-0">Who needs a decision now</h3>
+                            </div>
+                            <a href="/admin/approval-queue/" class="btn btn-sm btn-outline-primary">Open queue</a>
+                        </div>
+                        <div class="list-shell">
+                            {% for user in pending_approval_users %}
+                                <div class="list-row">
+                                    <div>
+                                        <div class="list-title">{{ user.full_name|default:user.phone_number }}</div>
+                                        <div class="list-meta">{{ user.role|title }} • {{ user.email|default:user.phone_number }}</div>
+                                        <div class="list-meta">
+                                            {% if user.approval_assigned_to %}
+                                                Assigned to {{ user.approval_assigned_to.full_name|default:user.approval_assigned_to.phone_number }}
+                                            {% else %}
+                                                Unassigned
+                                            {% endif %}
+                                            {% if user.approval_due_at %} • Due {{ user.approval_due_at|date:"d M Y, H:i" }}{% endif %}
+                                        </div>
+                                    </div>
+                                    <span class="status-pill {% if user.approval_is_overdue %}danger{% elif not user.approval_assigned_to %}warning{% endif %}">
+                                        {% if user.approval_is_overdue %}
+                                            Overdue
+                                        {% elif not user.approval_assigned_to %}
+                                            Needs owner
+                                        {% else %}
+                                            On track
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            {% empty %}
+                                <div class="list-row">
+                                    <div>
+                                        <div class="list-title">No approvals waiting</div>
+                                        <div class="list-meta">Your queue is clear right now.</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="section-kicker">Recent orders</div>
+                                <h2 class="h5 mb-0">Latest order activity</h2>
+                            </div>
+                        </div>
+                        <div class="table-responsive list-shell">
+                            <table class="table mini-table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Order</th>
+                                        <th>Status</th>
+                                        <th>Customer</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in recent_orders %}
+                                        <tr>
+                                            <td>
+                                                <div class="fw-semibold">{{ order.order_number }}</div>
+                                                <div class="list-meta">{{ order.created_at|date:"d M Y, H:i" }}</div>
+                                            </td>
+                                            <td><span class="status-pill">{{ order.get_status_display }}</span></td>
+                                            <td>{{ order.user.full_name|default:order.user.phone_number }}</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr><td colspan="3" class="text-secondary">No orders yet.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-6">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="section-kicker">Recent prescriptions</div>
+                                <h2 class="h5 mb-0">Clinical queue movement</h2>
+                            </div>
+                        </div>
+                        <div class="table-responsive list-shell">
+                            <table class="table mini-table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Reference</th>
+                                        <th>Status</th>
+                                        <th>Patient</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prescription in recent_prescriptions %}
+                                        <tr>
+                                            <td>
+                                                <div class="fw-semibold">{{ prescription.reference_code }}</div>
+                                                <div class="list-meta">{{ prescription.created_at|date:"d M Y, H:i" }}</div>
+                                            </td>
+                                            <td><span class="status-pill">{{ prescription.get_status_display }}</span></td>
+                                            <td>{{ prescription.patient_name }}</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr><td colspan="3" class="text-secondary">No prescriptions yet.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <section id="audit" class="dashboard-card p-4 p-md-5">
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <div class="section-kicker">Audit</div>
+                        <h2 class="h4 mb-2">Recent warning and critical events</h2>
+                        <p class="text-secondary">This is the part an admin should watch daily: failed logins, approval exceptions, and privileged activity that deserves a second look.</p>
+                        <div class="list-shell mt-4">
+                            {% for event in recent_audit %}
+                                <div class="list-row">
+                                    <div>
+                                        <div class="list-title">{{ event.message }}</div>
+                                        <div class="list-meta">{{ event.event_type }} • {{ event.created_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if event.severity == 'critical' %}danger{% else %}warning{% endif %}">{{ event.severity }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="list-row">
+                                    <div>
+                                        <div class="list-title">No elevated audit events</div>
+                                        <div class="list-meta">Nothing warning-level or critical has been logged recently.</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="section-kicker">My notifications</div>
+                        <h2 class="h5 mb-3">Admin inbox</h2>
+                        <div class="list-shell">
+                            {% for notification in my_notifications %}
+                                <div class="list-row">
+                                    <div>
+                                        <div class="list-title">{{ notification.title }}</div>
+                                        <div class="list-meta">{{ notification.body|truncatechars:90 }}</div>
+                                        <div class="list-meta">{{ notification.created_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    {% if not notification.is_read %}
+                                        <span class="status-pill">Unread</span>
+                                    {% endif %}
+                                </div>
+                            {% empty %}
+                                <div class="list-row">
+                                    <div>
+                                        <div class="list-title">No notifications</div>
+                                        <div class="list-meta">Admin alerts will appear here as your workflow grows.</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

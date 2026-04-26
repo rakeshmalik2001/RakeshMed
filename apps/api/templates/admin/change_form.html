@@ -1,0 +1,27 @@
+{% extends "admin/change_form.html" %}
+
+{% block content_title %}
+<section class="admin-page-hero">
+  <div>
+    <p class="admin-page-eyebrow">{{ opts.app_config.verbose_name|title }}</p>
+    <h1>
+      {% if add %}
+        Create {{ opts.verbose_name|title }}
+      {% else %}
+        Edit {{ original|default:opts.verbose_name|title }}
+      {% endif %}
+    </h1>
+    <p>
+      Keep this record clean, complete, and easy for operations teams to manage.
+    </p>
+  </div>
+  <div class="admin-page-meta">
+    <span>{{ opts.verbose_name_plural|title }}</span>
+    {% if add %}
+      <span>New record</span>
+    {% else %}
+      <span>Live record</span>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

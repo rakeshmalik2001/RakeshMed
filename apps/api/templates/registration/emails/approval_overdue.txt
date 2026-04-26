@@ -1,0 +1,9 @@
+An approval request is overdue.
+
+Applicant: {{ user_obj.full_name|default:user_obj.email|default:user_obj.phone_number }}
+Role: {{ user_obj.get_role_display }}
+Approval status: {{ user_obj.get_approval_status_display }}
+Assigned reviewer: {{ user_obj.approval_assigned_to|default:"Unassigned" }}
+Due at: {{ user_obj.approval_due_at|date:"d M Y, h:i A"|default:"Not scheduled" }}
+
+Open the approval detail page in the admin panel to review this request.

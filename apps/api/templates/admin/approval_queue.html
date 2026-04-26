@@ -1,0 +1,295 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<section class="dashboard-shell">
+  <section class="dashboard-hero">
+    <div class="dashboard-hero-copy">
+      <p class="admin-page-eyebrow">Access Governance</p>
+      <h1>Approval Queue</h1>
+      <p>Review and resolve pending pharmacist and vendor registration requests from one place.</p>
+      <div class="dashboard-role-badges">
+        <span>{{ queue_count }} pending</span>
+        <span>Admin only</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="dashboard-grid">
+    <div class="dashboard-column dashboard-column--wide">
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Pending Requests</h2>
+            <p>Approve legitimate medical operators quickly and reject invalid or incomplete requests.</p>
+          </div>
+          <a href="{% url 'admin-reviewer-schedules' %}">Manage schedules</a>
+        </header>
+        <div style="display:grid; gap:.75rem; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); margin-bottom:1rem;">
+          {% for preset in queue_presets %}
+          <a href="{{ preset.href }}" style="display:block; padding:.85rem 1rem; border:1px solid rgba(0,0,0,.08); border-radius:.75rem; text-decoration:none;">
+            <strong style="display:block; margin-bottom:.25rem;">{{ preset.label }}</strong>
+            <span>{{ preset.description }}</span>
+          </a>
+          {% endfor %}
+        </div>
+        <form method="get" style="display:grid; gap:.75rem; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); margin-bottom:1rem;">
+          <div>
+            <label for="assigned_to"><strong>Reviewer</strong></label>
+            <select id="assigned_to" name="assigned_to" style="width:100%; margin-top:.35rem;">
+              <option value="">All reviewers</option>
+              <option value="unassigned" {% if filter_state.assigned_to == "unassigned" %}selected{% endif %}>Unassigned</option>
+              {% for reviewer in reviewers %}
+              <option value="{{ reviewer.pk }}" {% if filter_state.assigned_to == reviewer.pk|stringformat:"s" %}selected{% endif %}>{{ reviewer }} - {{ reviewer.approval_availability_label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <label style="display:flex; align-items:end; gap:.5rem;">
+            <input type="checkbox" name="overdue" value="1" {% if filter_state.overdue_only %}checked{% endif %}>
+            <span>Overdue only</span>
+          </label>
+          <label style="display:flex; align-items:end; gap:.5rem;">
+            <input type="checkbox" name="escalated" value="1" {% if filter_state.escalated_only %}checked{% endif %}>
+            <span>Escalated recently</span>
+          </label>
+          <label style="display:flex; align-items:end; gap:.5rem;">
+            <input type="checkbox" name="document_rejected" value="1" {% if filter_state.document_rejected_only %}checked{% endif %}>
+            <span>Document rejected</span>
+          </label>
+          <div style="display:flex; align-items:end; gap:.5rem;">
+            <button type="submit" class="button default">Apply filters</button>
+            <a class="button" href="{{ queue_base_url }}">Reset</a>
+            <button type="submit" formaction="{% url 'admin-approval-queue-export' %}" class="button">Export CSV</button>
+          </div>
+        </form>
+        <form method="post" style="display:grid; gap:.75rem; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); margin-bottom:1rem;">
+          {% csrf_token %}
+          <input type="hidden" name="filter_assigned_to" value="{{ filter_state.assigned_to }}">
+          <input type="hidden" name="filter_overdue" value="{% if filter_state.overdue_only %}1{% endif %}">
+          <input type="hidden" name="filter_escalated" value="{% if filter_state.escalated_only %}1{% endif %}">
+          <input type="hidden" name="filter_document_rejected" value="{% if filter_state.document_rejected_only %}1{% endif %}">
+          <div style="display:flex; align-items:end;">
+            <button type="submit" name="bulk_action" value="bulk_claim_visible" class="button">Claim visible</button>
+          </div>
+          <div>
+            <label for="bulk-assigned-reviewer"><strong>Assign visible to</strong></label>
+            <select id="bulk-assigned-reviewer" name="assigned_reviewer_id" style="width:100%; margin-top:.35rem;">
+              {% for reviewer in reviewers %}
+              <option value="{{ reviewer.pk }}">{{ reviewer }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div style="display:flex; align-items:end;">
+            <button type="submit" name="bulk_action" value="bulk_assign_visible" class="button default">Assign visible</button>
+          </div>
+          <div style="display:flex; align-items:end;">
+            <button type="submit" name="bulk_action" value="bulk_assign_suggested_visible" class="button">Auto-assign visible</button>
+          </div>
+          <div style="grid-column:1 / -1;">
+            <label for="bulk-approval-notes"><strong>Bulk document note</strong></label>
+            <textarea id="bulk-approval-notes" name="approval_notes" rows="2" style="width:100%; margin-top:.35rem;" placeholder="Optional note for bulk document review"></textarea>
+          </div>
+          <div style="display:flex; align-items:end;">
+            <button type="submit" name="bulk_action" value="bulk_verify_visible_documents" class="button">Verify visible documents</button>
+          </div>
+          <div style="display:flex; align-items:end;">
+            <button type="submit" name="bulk_action" value="bulk_reject_visible_documents" class="button">Reject visible documents</button>
+          </div>
+        </form>
+        {% if queue %}
+        {% if reviewer_workloads %}
+        <div style="display:grid; gap:.75rem; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); margin-bottom:1rem;">
+          {% for item in reviewer_workloads %}
+          <a href="{{ item.href }}" style="display:block; padding:.85rem 1rem; border:1px solid rgba(0,0,0,.08); border-radius:.75rem; text-decoration:none;">
+            <strong style="display:block; margin-bottom:.25rem;">{{ item.label }}</strong>
+            <span style="display:block;">{{ item.specialty_label }}</span>
+            <span style="display:block;">{{ item.availability_label }}</span>
+            <span style="display:block;">{{ item.pending_count }} assigned</span>
+            <span style="display:block;">{{ item.overdue_count }} overdue</span>
+          </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <div class="dashboard-data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Owner</th>
+                <th>SLA</th>
+                <th>Compliance</th>
+                <th>Verification</th>
+                <th>History</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Requested</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in queue %}
+              <tr>
+                <td>
+                  <a href="{% url 'admin-approval-detail' user.pk %}">{{ user.full_name|default:"Not provided" }}</a>
+                </td>
+                <td>{{ user.get_role_display }}</td>
+                <td>
+                  <strong>{{ user.approval_assignee_label }}</strong><br>
+                  {% if user.approval_assigned_at %}
+                  <span>Assigned {{ user.approval_assigned_at|date:"d M, h:i A" }}</span>
+                  {% else %}
+                  <span>Waiting for ownership</span>
+                  {% if user.suggested_reviewer_label %}
+                  <br><span>Suggested reviewer: {{ user.suggested_reviewer_label }} ({{ user.suggested_reviewer_specialty_label }})</span>
+                  {% endif %}
+                  {% endif %}
+                </td>
+                <td>
+                  {% if user.approval_sla_state_value == "overdue" %}
+                  <strong style="color:#b42318;">Overdue</strong>
+                  {% elif user.approval_sla_state_value == "on_track" %}
+                  <strong style="color:#027a48;">On track</strong>
+                  {% else %}
+                  <strong>Resolved</strong>
+                  {% endif %}
+                  <br>
+                  <span>Due {{ user.approval_due_label }}</span>
+                </td>
+                <td>
+                  {% if user.role == "vendor" %}
+                    <strong>{{ user.business_name|default:"No business name" }}</strong><br>
+                    <span>{{ user.vendor_license_number|default:"No vendor license submitted" }}</span><br>
+                    {% if user.vendor_license_document %}
+                    <a href="{% url 'admin-approval-document-download' user.pk 'vendor' %}">Open vendor proof</a>
+                    {% else %}
+                    <span>No vendor document uploaded</span>
+                    {% endif %}
+                  {% elif user.role == "pharmacist" %}
+                    <strong>Registration</strong><br>
+                    <span>{{ user.pharmacist_registration_number|default:"No pharmacist registration submitted" }}</span><br>
+                    {% if user.pharmacist_registration_document %}
+                    <a href="{% url 'admin-approval-document-download' user.pk 'pharmacist' %}">Open pharmacist proof</a>
+                    {% else %}
+                    <span>No pharmacist document uploaded</span>
+                    {% endif %}
+                  {% else %}
+                    <span>Not required</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if user.role == "vendor" %}
+                    <strong>{{ user.get_vendor_license_document_status_display }}</strong>
+                  {% elif user.role == "pharmacist" %}
+                    <strong>{{ user.get_pharmacist_registration_document_status_display }}</strong>
+                  {% else %}
+                    <strong>Not Required</strong>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if user.approval_timeline %}
+                    <div style="display:grid; gap:.4rem;">
+                      {% for item in user.approval_timeline %}
+                      <div style="padding:.4rem .5rem; border:1px solid rgba(0,0,0,.08); border-radius:.5rem;">
+                        <strong style="display:block;">{{ item.message }}</strong>
+                        <span style="display:block; font-size:.85em;">{{ item.actor_label }} | {{ item.timestamp }}</span>
+                      </div>
+                      {% endfor %}
+                    </div>
+                    <div style="margin-top:.5rem;">
+                      <a href="{% url 'admin-approval-detail' user.pk %}">Open full timeline</a>
+                    </div>
+                  {% else %}
+                    <a href="{% url 'admin-approval-detail' user.pk %}">Open request detail</a>
+                  {% endif %}
+                </td>
+                <td>{{ user.email|default:"Not provided" }}</td>
+                <td>{{ user.phone_number }}</td>
+                <td>{{ user.created_at|date:"d M Y, h:i A" }}</td>
+                <td>
+                  <div style="display:grid; gap:.5rem;">
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="user_id" value="{{ user.pk }}">
+                      <input type="hidden" name="next" value="{% url 'admin-approval-detail' user.pk %}">
+                      <input type="hidden" name="assignment_action" value="claim">
+                      <button type="submit" class="button">Claim review</button>
+                    </form>
+                    {% if user.suggested_reviewer %}
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="user_id" value="{{ user.pk }}">
+                      <input type="hidden" name="next" value="{% url 'admin-approval-detail' user.pk %}">
+                      <input type="hidden" name="assignment_action" value="assign_suggested">
+                      <button type="submit" class="button">Assign suggested</button>
+                    </form>
+                    {% endif %}
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="user_id" value="{{ user.pk }}">
+                      <input type="hidden" name="next" value="{% url 'admin-approval-detail' user.pk %}">
+                      <input type="hidden" name="assignment_action" value="assign">
+                      <select name="assigned_reviewer_id" style="width:100%; margin-bottom:.5rem;">
+                        {% for reviewer in reviewers %}
+                        <option value="{{ reviewer.pk }}" {% if user.approval_assigned_to_id == reviewer.pk %}selected{% endif %}>{{ reviewer }} - {{ reviewer.approval_availability_label }}</option>
+                        {% endfor %}
+                      </select>
+                      <button type="submit" class="button">Assign reviewer</button>
+                    </form>
+                    {% if user.approval_assigned_to %}
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="user_id" value="{{ user.pk }}">
+                      <input type="hidden" name="next" value="{% url 'admin-approval-detail' user.pk %}">
+                      <input type="hidden" name="assignment_action" value="unassign">
+                      <button type="submit" class="button">Unassign</button>
+                    </form>
+                    {% endif %}
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="user_id" value="{{ user.pk }}">
+                      <input type="hidden" name="next" value="{% url 'admin-approval-detail' user.pk %}">
+                      <input type="hidden" name="decision" value="approved">
+                      <textarea name="approval_notes" rows="2" style="width:100%; margin-bottom:.5rem;" placeholder="Optional approval note"></textarea>
+                      <button type="submit" class="button default">Approve</button>
+                    </form>
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="user_id" value="{{ user.pk }}">
+                      <input type="hidden" name="next" value="{% url 'admin-approval-detail' user.pk %}">
+                      <input type="hidden" name="document_kind" value="{% if user.role == 'vendor' %}vendor{% elif user.role == 'pharmacist' %}pharmacist{% endif %}">
+                      <input type="hidden" name="document_decision" value="verified">
+                      <textarea name="approval_notes" rows="2" style="width:100%; margin-bottom:.5rem;" placeholder="Verification note"></textarea>
+                      <button type="submit" class="button">Verify document</button>
+                    </form>
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="user_id" value="{{ user.pk }}">
+                      <input type="hidden" name="next" value="{% url 'admin-approval-detail' user.pk %}">
+                      <input type="hidden" name="document_kind" value="{% if user.role == 'vendor' %}vendor{% elif user.role == 'pharmacist' %}pharmacist{% endif %}">
+                      <input type="hidden" name="document_decision" value="rejected">
+                      <textarea name="approval_notes" rows="2" style="width:100%; margin-bottom:.5rem;" placeholder="Document rejection note"></textarea>
+                      <button type="submit" class="button">Reject document</button>
+                    </form>
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="user_id" value="{{ user.pk }}">
+                      <input type="hidden" name="next" value="{% url 'admin-approval-detail' user.pk %}">
+                      <input type="hidden" name="decision" value="rejected">
+                      <textarea name="approval_notes" rows="2" style="width:100%; margin-bottom:.5rem;" placeholder="Optional rejection reason"></textarea>
+                      <button type="submit" class="button">Reject</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="dashboard-empty-state">No pending approval requests right now.</p>
+        {% endif %}
+      </article>
+    </div>
+  </section>
+</section>
+{% endblock %}

@@ -1,0 +1,179 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Marketing Dashboard | RakeshMed{% endblock %}
+
+{% block extra_head %}
+<style>
+    .marketing-hero {
+        background:
+            radial-gradient(circle at top right, rgba(236, 72, 153, 0.14), transparent 30%),
+            radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.10), transparent 34%),
+            linear-gradient(135deg, #ffffff 0%, #fff9fd 100%);
+    }
+    .section-kicker { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--portal-accent); font-weight: 700; }
+    .panel-shell { border: 1px solid var(--portal-line); border-radius: 1rem; overflow: hidden; background: #fff; }
+    .panel-row { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 1.1rem; border-top: 1px solid var(--portal-line); }
+    .panel-row:first-child { border-top: 0; }
+    .meta { color: #6f7f8a; font-size: .92rem; }
+    .status-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: .28rem .65rem; background: rgba(236, 72, 153, 0.1); color: #db2777; font-size: .8rem; font-weight: 700; }
+    .status-pill.warning { background: rgba(245, 158, 11, 0.18); color: #b96a13; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid portal-shell py-4">
+    <div class="row g-4">
+        <div class="col-xl-3">
+            <div class="dashboard-card p-4 h-100">
+                <div class="brand-pill mb-4"><i class="bi bi-megaphone"></i> Marketing Console</div>
+                <div class="nav flex-column gap-2">
+                    {% for item in role_sidebar %}
+                        <a class="sidebar-link" href="{{ item.url }}">
+                            <i class="bi bi-{{ item.icon }}"></i>
+                            <span>{{ item.label }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{% url 'logout' %}" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-xl-9">
+            <section class="dashboard-card marketing-hero p-4 p-md-5 mb-4">
+                <div class="brand-pill mb-3"><i class="bi bi-graph-up-arrow"></i> Demand & Audience</div>
+                <h1 class="display-6 fw-semibold mb-2">Track customer activity, demand signals, and campaign-facing catalog mix.</h1>
+                <p class="lead text-secondary mb-4">This dashboard is designed for marketing managers watching customer website activity, order demand, prescription mix, and product/category focus areas.</p>
+                <div class="row g-3">
+                    {% for metric in metrics %}
+                        <div class="col-md-3 col-6">
+                            <div class="metric-tile h-100">
+                                <div class="text-secondary small text-uppercase">{{ metric.label }}</div>
+                                <div class="display-6 fw-semibold">{{ metric.value }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="section-kicker mb-2">Quick Actions</div>
+                <div class="row g-3">
+                    {% for action in quick_actions %}
+                        <div class="col-md-4">
+                            <a class="action-tile h-100" href="{{ action.url }}">
+                                <div>
+                                    <div class="fw-semibold">{{ action.label }}</div>
+                                    <div class="text-secondary small">Open the linked marketing workflow tool.</div>
+                                </div>
+                                <i class="bi bi-{{ action.icon }} fs-4 text-primary"></i>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <section id="audience" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Audience</div>
+                        <h2 class="h5 mb-3">Audience activity snapshot</h2>
+                        <div class="row g-3">
+                            {% for item in audience_snapshot %}
+                                <div class="col-6">
+                                    <div class="metric-tile h-100">
+                                        <div class="text-secondary small text-uppercase">{{ item.label }}</div>
+                                        <div class="display-6 fw-semibold">{{ item.value }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-6">
+                    <section id="demand" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Demand</div>
+                        <h2 class="h5 mb-3">Demand signal snapshot</h2>
+                        <div class="row g-3">
+                            {% for item in demand_snapshot %}
+                                <div class="col-6">
+                                    <div class="metric-tile h-100">
+                                        <div class="text-secondary small text-uppercase">{{ item.label }}</div>
+                                        <div class="display-6 fw-semibold">{{ item.value }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Recent Audience Activity</div>
+                        <h2 class="h5 mb-3">Top recent active customers</h2>
+                        <div class="panel-shell">
+                            {% for row in recent_activity %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ row.user.full_name|default:row.user.email|default:row.user.phone_number }}</div>
+                                        <div class="meta">{{ row.activity_date|date:"d M Y" }} | {{ row.heartbeat_count }} heartbeats</div>
+                                    </div>
+                                    <span class="status-pill">{{ row.active_seconds|floatformat:0 }} sec</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No recent customer activity available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-6">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Category Mix</div>
+                        <h2 class="h5 mb-3">Most populated active categories</h2>
+                        <div class="panel-shell">
+                            {% for category in category_mix %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ category.name }}</div>
+                                        <div class="meta">Active category in the storefront mix</div>
+                                    </div>
+                                    <span class="status-pill">{{ category.product_count }} products</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No active categories available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-12">
+                    <section id="catalog-focus" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Catalog Focus</div>
+                        <h2 class="h5 mb-3">Recently updated campaign-relevant products</h2>
+                        <div class="panel-shell">
+                            {% for product in catalog_focus %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ product.name }}</div>
+                                        <div class="meta">{{ product.category.name|default:"General" }} | {{ product.brand.name|default:"No brand" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if product.requires_prescription %}warning{% endif %}">
+                                        {% if product.requires_prescription %}Rx{% elif product.is_otc %}OTC{% else %}General{% endif %}
+                                    </span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No catalog focus products available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

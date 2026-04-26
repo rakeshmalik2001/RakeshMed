@@ -1,0 +1,24 @@
+{% extends "admin/login.html" %}
+
+{% block content %}
+<div class="admin-login-shell">
+  <div class="admin-login-panel">
+    <div class="admin-login-copy">
+      <p class="admin-page-eyebrow">TrueCare Backoffice</p>
+      <h1>Sign in to your control center</h1>
+      <p>
+        Review prescriptions, manage catalog structure, support customers, and keep pharmacy operations moving.
+      </p>
+      <div class="admin-login-pills">
+        <span>Catalog</span>
+        <span>Orders</span>
+        <span>Prescriptions</span>
+        <span>Users</span>
+      </div>
+    </div>
+    <div class="admin-login-form">
+      {{ block.super }}
+    </div>
+  </div>
+</div>
+{% endblock %}

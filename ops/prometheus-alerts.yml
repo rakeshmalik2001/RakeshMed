@@ -1,0 +1,24 @@
+groups:
+  - name: rakeshmed-api
+    rules:
+      - alert: RakeshMedHigh5xxRate
+        expr: rakeshmed_status_5xx_total > 25
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RakeshMed is returning too many 5xx responses"
+      - alert: RakeshMedCacheMissSpike
+        expr: rakeshmed_cache_hit_ratio < 0.60
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cache hit ratio dropped below target"
+      - alert: RakeshMedSlowAverageResponse
+        expr: rakeshmed_avg_duration_ms > 800
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Average API response time is elevated"

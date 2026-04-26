@@ -1,0 +1,177 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Catalog Dashboard | RakeshMed{% endblock %}
+
+{% block extra_head %}
+<style>
+    .catalog-hero {
+        background:
+            radial-gradient(circle at top right, rgba(31, 122, 140, 0.16), transparent 30%),
+            radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.12), transparent 34%),
+            linear-gradient(135deg, #ffffff 0%, #f8fcff 100%);
+    }
+    .section-kicker { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--portal-accent); font-weight: 700; }
+    .panel-shell { border: 1px solid var(--portal-line); border-radius: 1rem; overflow: hidden; background: #fff; }
+    .panel-row { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 1.1rem; border-top: 1px solid var(--portal-line); }
+    .panel-row:first-child { border-top: 0; }
+    .meta { color: #6f7f8a; font-size: .92rem; }
+    .status-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: .28rem .65rem; background: rgba(31, 122, 140, 0.1); color: var(--portal-accent); font-size: .8rem; font-weight: 700; }
+    .status-pill.warning { background: rgba(245, 158, 11, 0.18); color: #b96a13; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid portal-shell py-4">
+    <div class="row g-4">
+        <div class="col-xl-3">
+            <div class="dashboard-card p-4 h-100">
+                <div class="brand-pill mb-4"><i class="bi bi-capsule-pill"></i> Catalog Console</div>
+                <div class="nav flex-column gap-2">
+                    {% for item in role_sidebar %}
+                        <a class="sidebar-link" href="{{ item.url }}">
+                            <i class="bi bi-{{ item.icon }}"></i>
+                            <span>{{ item.label }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{% url 'logout' %}" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-xl-9">
+            <section class="dashboard-card catalog-hero p-4 p-md-5 mb-4">
+                <div class="brand-pill mb-3"><i class="bi bi-grid-1x2"></i> Catalog Operations</div>
+                <h1 class="display-6 fw-semibold mb-2">Manage medicine coverage, structure, and substitute readiness.</h1>
+                <p class="lead text-secondary mb-4">This dashboard is designed for catalog managers shaping active product coverage, category structure, brand visibility, and substitute completeness.</p>
+                <div class="row g-3">
+                    {% for metric in metrics %}
+                        <div class="col-md-3 col-6">
+                            <div class="metric-tile h-100">
+                                <div class="text-secondary small text-uppercase">{{ metric.label }}</div>
+                                <div class="display-6 fw-semibold">{{ metric.value }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="section-kicker mb-2">Quick Actions</div>
+                <div class="row g-3">
+                    {% for action in quick_actions %}
+                        <div class="col-md-4">
+                            <a class="action-tile h-100" href="{{ action.url }}">
+                                <div>
+                                    <div class="fw-semibold">{{ action.label }}</div>
+                                    <div class="text-secondary small">Open the linked catalog workflow tool.</div>
+                                </div>
+                                <i class="bi bi-{{ action.icon }} fs-4 text-primary"></i>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <section id="coverage" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Coverage</div>
+                        <h2 class="h5 mb-3">Product coverage snapshot</h2>
+                        <div class="row g-3">
+                            {% for item in coverage_snapshot %}
+                                <div class="col-6">
+                                    <div class="metric-tile h-100">
+                                        <div class="text-secondary small text-uppercase">{{ item.label }}</div>
+                                        <div class="display-6 fw-semibold">{{ item.value }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-6">
+                    <section id="structure" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Structure</div>
+                        <h2 class="h5 mb-3">Catalog structure health</h2>
+                        <div class="row g-3">
+                            {% for item in structure_snapshot %}
+                                <div class="col-6">
+                                    <div class="metric-tile h-100">
+                                        <div class="text-secondary small text-uppercase">{{ item.label }}</div>
+                                        <div class="display-6 fw-semibold">{{ item.value }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Recent Products</div>
+                        <h2 class="h5 mb-3">Latest updated catalog items</h2>
+                        <div class="panel-shell">
+                            {% for product in recent_products %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ product.name }}</div>
+                                        <div class="meta">{{ product.category.name|default:"General" }} | {{ product.brand.name|default:"No brand" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if product.stock_status == 'low_stock' %}warning{% endif %}">{{ product.get_stock_status_display }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No recent catalog updates available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-6">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Category Mix</div>
+                        <h2 class="h5 mb-3">Most populated categories</h2>
+                        <div class="panel-shell">
+                            {% for category in top_categories %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ category.name }}</div>
+                                        <div class="meta">Category structure and product grouping</div>
+                                    </div>
+                                    <span class="status-pill">{{ category.product_count }} products</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No categories available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-12">
+                    <section id="substitutes" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Substitutes</div>
+                        <h2 class="h5 mb-3">Latest substitute mappings</h2>
+                        <div class="panel-shell">
+                            {% for link in recent_substitutes %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ link.source_product.name }} -> {{ link.substitute_product.name }}</div>
+                                        <div class="meta">{{ link.reason|default:"No substitution note provided." }}</div>
+                                    </div>
+                                    <span class="status-pill">Mapped</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No substitute links available yet.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

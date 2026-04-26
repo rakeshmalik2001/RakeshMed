@@ -1,0 +1,140 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Doctor Dashboard | RakeshMed{% endblock %}
+
+{% block extra_head %}
+<style>
+    .doctor-hero {
+        background:
+            radial-gradient(circle at top right, rgba(59, 130, 246, 0.14), transparent 30%),
+            radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.12), transparent 34%),
+            linear-gradient(135deg, #ffffff 0%, #f7fbff 100%);
+    }
+    .section-kicker { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--portal-accent); font-weight: 700; }
+    .panel-shell { border: 1px solid var(--portal-line); border-radius: 1rem; overflow: hidden; background: #fff; }
+    .panel-row { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 1.1rem; border-top: 1px solid var(--portal-line); }
+    .panel-row:first-child { border-top: 0; }
+    .meta { color: #6f7f8a; font-size: .92rem; }
+    .status-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: .28rem .65rem; background: rgba(31, 122, 140, 0.1); color: var(--portal-accent); font-size: .8rem; font-weight: 700; }
+    .status-pill.warning { background: rgba(245, 158, 11, 0.18); color: #b96a13; }
+    .status-pill.danger { background: rgba(229, 62, 62, 0.12); color: #c53030; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid portal-shell py-4">
+    <div class="row g-4">
+        <div class="col-xl-3">
+            <div class="dashboard-card p-4 h-100">
+                <div class="brand-pill mb-4"><i class="bi bi-heart-pulse"></i> Doctor Console</div>
+                <div class="nav flex-column gap-2">
+                    {% for item in role_sidebar %}
+                        <a class="sidebar-link" href="{{ item.url }}">
+                            <i class="bi bi-{{ item.icon }}"></i>
+                            <span>{{ item.label }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{% url 'logout' %}" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-xl-9">
+            <section class="dashboard-card doctor-hero p-4 p-md-5 mb-4">
+                <div class="brand-pill mb-3"><i class="bi bi-clipboard2-pulse"></i> Clinical Oversight</div>
+                <h1 class="display-6 fw-semibold mb-2">Review doctor-linked prescription activity with clearer clinical context.</h1>
+                <p class="lead text-secondary mb-4">This dashboard is designed for doctors reviewing prescription-linked demand, clinical review pressure, and the latest patient cases touching doctor-authored prescriptions.</p>
+                <div class="row g-3">
+                    {% for metric in metrics %}
+                        <div class="col-md-3 col-6">
+                            <div class="metric-tile h-100">
+                                <div class="text-secondary small text-uppercase">{{ metric.label }}</div>
+                                <div class="display-6 fw-semibold">{{ metric.value }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="section-kicker mb-2">Quick Actions</div>
+                <div class="row g-3">
+                    {% for action in quick_actions %}
+                        <div class="col-md-4">
+                            <a class="action-tile h-100" href="{{ action.url }}">
+                                <div>
+                                    <div class="fw-semibold">{{ action.label }}</div>
+                                    <div class="text-secondary small">Open the linked clinical workflow tool.</div>
+                                </div>
+                                <i class="bi bi-{{ action.icon }} fs-4 text-primary"></i>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-5">
+                    <section id="clinical-queue" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Clinical Queue</div>
+                        <h2 class="h5 mb-3">Prescription status snapshot</h2>
+                        <div class="row g-3">
+                            {% for item in clinical_snapshot %}
+                                <div class="col-6">
+                                    <div class="metric-tile h-100">
+                                        <div class="text-secondary small text-uppercase">{{ item.label }}</div>
+                                        <div class="display-6 fw-semibold">{{ item.value }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-7">
+                    <section id="doctor-activity" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Doctor Activity</div>
+                        <h2 class="h5 mb-3">Most active doctor-linked records</h2>
+                        <div class="panel-shell">
+                            {% for item in doctor_activity %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ item.doctor_name }}</div>
+                                        <div class="meta">Distinct doctor name derived from prescription records</div>
+                                    </div>
+                                    <span class="status-pill">{{ item.case_count }} cases</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No doctor-linked prescription activity yet.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-12">
+                    <section id="recent-cases" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Recent Cases</div>
+                        <h2 class="h5 mb-3">Latest doctor-linked prescriptions</h2>
+                        <div class="panel-shell">
+                            {% for prescription in recent_cases %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ prescription.reference_code }} | {{ prescription.patient_name }}</div>
+                                        <div class="meta">{{ prescription.doctor_name }} | {{ prescription.user.full_name|default:prescription.user.phone_number }} | {{ prescription.updated_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if prescription.status == 'clarification_required' or prescription.status == 'pending_review' %}warning{% elif prescription.status == 'rejected' %}danger{% endif %}">{{ prescription.get_status_display }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No recent doctor-linked prescriptions available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

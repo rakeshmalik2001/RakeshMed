@@ -1,0 +1,7 @@
+A new {{ user_obj.get_role_display }} account is awaiting approval.
+
+Name: {{ user_obj.full_name|default:"Not provided" }}
+Email: {{ user_obj.email|default:"Not provided" }}
+Phone: {{ user_obj.phone_number }}
+
+Review this request in the Django admin user management screen.

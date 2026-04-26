@@ -1,0 +1,655 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<section class="dashboard-shell" data-dashboard-root data-live-url="{{ dashboard_live_url }}" data-user-role="{{ user_role }}">
+  {{ command_items|json_script:"admin-command-items" }}
+  <section class="dashboard-hero">
+    <div class="dashboard-hero-copy">
+      <p class="admin-page-eyebrow">{{ role_dashboard.eyebrow }}</p>
+      <h1>{{ role_dashboard.headline }}</h1>
+      <p>{{ role_dashboard.description }}</p>
+      <div class="dashboard-role-badges">
+        {% for chip in role_dashboard.chips %}
+        <span>{{ chip }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="dashboard-hero-actions">
+      {% for card in action_cards %}
+      <a class="dashboard-action dashboard-action--{{ card.tone }}" href="{{ card.href }}">
+        <strong>{{ card.title }}</strong>
+        <span>{{ card.description }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="dashboard-utility-row">
+    <article class="dashboard-panel dashboard-panel--system">
+      <header class="dashboard-panel-header">
+        <div>
+          <h2>System Health</h2>
+          <p>Live monitoring for the control plane, queue pressure, and backend reliability.</p>
+        </div>
+        <span class="dashboard-live-pill" data-live-timestamp>Last sync {{ dashboard_last_updated }}</span>
+      </header>
+      <div class="dashboard-health-grid">
+        {% for item in system_health_panels %}
+        <div class="dashboard-health-card dashboard-health-card--{{ item.tone }}">
+          <div class="dashboard-health-head">
+            <strong>{{ item.label }}</strong>
+            <span class="dashboard-health-status">{{ item.status }}</span>
+          </div>
+          <p>{{ item.meta }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </article>
+
+    <article class="dashboard-panel dashboard-panel--rings">
+      <header class="dashboard-panel-header">
+        <div>
+          <h2>Performance Rings</h2>
+          <p>Glowing progress gauges for coverage, throughput, review SLA, and payment reliability.</p>
+        </div>
+      </header>
+      <div class="dashboard-ring-grid">
+        {% for ring in performance_rings %}
+        <div class="dashboard-ring-card">
+          <div class="dashboard-ring" style="--progress: {{ ring.value }};">
+            <span>{{ ring.value }}%</span>
+          </div>
+          <strong>{{ ring.label }}</strong>
+          <p>{{ ring.meta }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </article>
+  </section>
+
+  <section class="dashboard-kpis">
+    {% for tile in kpi_tiles %}
+    <article class="dashboard-kpi" data-live-scope="kpis" data-live-key="{{ tile.label }}">
+      <p>{{ tile.label }}</p>
+      <h2>{{ tile.value }}</h2>
+      <span>{{ tile.meta }}</span>
+    </article>
+    {% endfor %}
+  </section>
+
+  {% if role_layout.show_business_tiles %}
+  <section class="dashboard-kpis dashboard-kpis--secondary">
+    {% for tile in business_tiles %}
+    <article class="dashboard-kpi dashboard-kpi--secondary" data-live-scope="business" data-live-key="{{ tile.label }}">
+      <p>{{ tile.label }}</p>
+      <h2>{{ tile.value }}</h2>
+      <span>{{ tile.meta }}</span>
+    </article>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if role_layout.show_today_tiles %}
+  <section class="dashboard-kpis dashboard-kpis--tertiary">
+    {% for tile in today_tiles %}
+    <article class="dashboard-kpi dashboard-kpi--tertiary" data-live-scope="today" data-live-key="{{ tile.label }}">
+      <p>{{ tile.label }}</p>
+      <h2>{{ tile.value }}</h2>
+      <span>{{ tile.meta }}</span>
+    </article>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <section class="dashboard-kpis dashboard-kpis--alerts">
+    {% for tile in alert_tiles %}
+    <article class="dashboard-kpi dashboard-kpi--alert" data-live-scope="alerts" data-live-key="{{ tile.label }}">
+      <p>{{ tile.label }}</p>
+      <h2>{{ tile.value }}</h2>
+      <span>{{ tile.meta }}</span>
+    </article>
+    {% endfor %}
+  </section>
+
+  {% if approval_preset_tiles %}
+  <section class="dashboard-kpis dashboard-kpis--secondary">
+    {% for tile in approval_preset_tiles %}
+    <a class="dashboard-kpi dashboard-kpi--secondary" href="{{ tile.href }}">
+      <p>{{ tile.label }}</p>
+      <h2>{{ tile.value }}</h2>
+      <span>{{ tile.meta }}</span>
+    </a>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <section class="dashboard-grid">
+    <div class="dashboard-column">
+      {% for panel in role_focus_panels %}
+      <article class="dashboard-panel dashboard-panel--focus">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>{{ panel.title }}</h2>
+            <p>Personalized focus area for your current role.</p>
+          </div>
+        </header>
+        <div class="dashboard-metric-list">
+          {% for item in panel.items %}
+          <a class="dashboard-metric-item" href="{{ item.href }}">
+            <div>
+              <strong>{{ item.label }}</strong>
+            </div>
+            <span>{{ item.value }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </article>
+      {% endfor %}
+
+      {% for panel in spotlight_panels %}
+      <article class="dashboard-panel">
+        <header>
+          <h2>{{ panel.title }}</h2>
+        </header>
+        <div class="dashboard-metric-list">
+          {% for item in panel.items %}
+          <a class="dashboard-metric-item" href="{{ item.href }}">
+            <div>
+              <strong>{{ item.label }}</strong>
+            </div>
+            <span>{{ item.value }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </article>
+      {% endfor %}
+
+      {% if pending_approval_users %}
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Approval Queue</h2>
+            <p>Pending pharmacist and vendor registrations that need an admin decision.</p>
+          </div>
+          <a href="{% url 'admin-approval-queue' %}">Open queue</a>
+        </header>
+        <div class="dashboard-metric-list">
+          {% for user in pending_approval_users %}
+          <a class="dashboard-metric-item" href="{{ user.approval_queue_href }}">
+            <div>
+              <strong>{{ user.full_name|default:user.email|default:user.phone_number }}</strong>
+              <p>{{ user.get_role_display }} | {{ user.email|default:user.phone_number }}</p>
+            </div>
+            <span>{{ user.created_at|date:"d M" }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </article>
+      {% endif %}
+
+      {% if dashboard_approval_presets %}
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Approval Presets</h2>
+            <p>Jump directly into the approval slice you need without rebuilding filters.</p>
+          </div>
+          <a href="{% url 'admin-approval-queue' %}">Open queue</a>
+        </header>
+        <div class="dashboard-metric-list">
+          {% for preset in dashboard_approval_presets %}
+          <a class="dashboard-metric-item" href="{{ preset.href }}">
+            <div>
+              <strong>{{ preset.label }}</strong>
+              <p>{{ preset.description }}</p>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </article>
+      {% endif %}
+
+      {% if approval_reviewer_workloads %}
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Reviewer Workload</h2>
+            <p>Use current queue pressure to decide who should claim the next approval.</p>
+          </div>
+          <a href="{% url 'admin-reviewer-schedules' %}">Manage schedules</a>
+        </header>
+        <div class="dashboard-metric-list">
+          {% for item in approval_reviewer_workloads %}
+          <a class="dashboard-metric-item" href="{{ item.href }}">
+            <div>
+              <strong>{{ item.label }}</strong>
+              <p>{{ item.specialty_label }} | {{ item.availability_label }} | {{ item.pending_count }} assigned | {{ item.overdue_count }} overdue</p>
+            </div>
+            <span>{{ item.load_score }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </article>
+      {% endif %}
+
+      {% if overdue_approval_users %}
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Overdue Approval Requests</h2>
+            <p>These pending approvals have crossed SLA and should be resolved first.</p>
+          </div>
+          <a href="{% url 'admin-approval-queue' %}?overdue=1">Open queue</a>
+        </header>
+        <div class="dashboard-metric-list">
+          {% for user in overdue_approval_users %}
+          <a class="dashboard-metric-item" href="{{ user.approval_queue_href }}">
+            <div>
+              <strong>{{ user.full_name|default:user.email|default:user.phone_number }}</strong>
+              <p>{{ user.approval_assignee_label }} | Due {{ user.approval_due_label }}</p>
+            </div>
+            <span>{{ user.get_role_display }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </article>
+      {% endif %}
+
+      {% if overdue_approval_by_owner %}
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Overdue By Owner</h2>
+            <p>Ownership snapshot for the current overdue approval workload.</p>
+          </div>
+          <a href="{% url 'admin-approval-queue' %}?overdue=1">Review assignments</a>
+        </header>
+        <div class="dashboard-metric-list">
+          {% for item in overdue_approval_by_owner %}
+          <a class="dashboard-metric-item" href="{{ item.href }}">
+            <div>
+              <strong>{{ item.owner_label }}</strong>
+            </div>
+            <span>{{ item.count }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </article>
+      {% endif %}
+
+      {% if role_layout.show_role_shortcuts %}
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Role Shortcuts</h2>
+            <p>Open the most common backoffice workflows by responsibility.</p>
+          </div>
+        </header>
+        <div class="dashboard-role-grid">
+          {% for role in role_cards %}
+          <section class="dashboard-role-card">
+            <h3>{{ role.title }}</h3>
+            <p>{{ role.description }}</p>
+            <div class="dashboard-role-links">
+              {% for link in role.links %}
+              <a href="{{ link.href }}">{{ link.label }}</a>
+              {% endfor %}
+            </div>
+          </section>
+          {% endfor %}
+        </div>
+      </article>
+      {% endif %}
+
+      {% if role_layout.show_task_board %}
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Today's Tasks</h2>
+            <p>Use this board to focus the team on the highest-priority operational work right now.</p>
+          </div>
+        </header>
+        <div class="dashboard-task-groups">
+          {% for group in today_task_groups %}
+          <section class="dashboard-task-group">
+            <h3>{{ group.title }}</h3>
+            <div class="dashboard-task-list">
+              {% for task in group.tasks %}
+              <a class="dashboard-task-item" href="{{ task.href }}">
+                <strong>{{ task.label }}</strong>
+                <span>{{ task.value }}</span>
+              </a>
+              {% endfor %}
+            </div>
+          </section>
+          {% endfor %}
+        </div>
+      </article>
+      {% endif %}
+
+      {% if role_layout.show_status_mix %}
+      {% for panel in status_breakdown_panels %}
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>{{ panel.title }}</h2>
+            <p>Quick visual read of current workflow distribution.</p>
+          </div>
+        </header>
+        <div class="dashboard-breakdown-list">
+          {% for item in panel.items %}
+          <a class="dashboard-breakdown-item" href="{{ item.href }}">
+            <div class="dashboard-breakdown-head">
+              <strong>{{ item.label }}</strong>
+              <span>{{ item.value }}</span>
+            </div>
+            <div class="dashboard-breakdown-bar">
+              <div class="dashboard-breakdown-fill" style="width: {% widthratio item.value 1 8 %}%;"></div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </article>
+      {% endfor %}
+      {% endif %}
+
+      <article class="dashboard-panel dashboard-panel--timeline">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Live Activity Feed</h2>
+            <p>Timeline view for orders, prescriptions, and payment movement across the system.</p>
+          </div>
+        </header>
+        <div class="dashboard-feed-list" data-live-feed>
+          {% for item in activity_feed %}
+          <a class="dashboard-feed-item dashboard-feed-item--{{ item.tone }}" href="{{ item.href }}">
+            <span class="dashboard-feed-dot"></span>
+            <div class="dashboard-feed-copy">
+              <strong>{{ item.title }}</strong>
+              <p>{{ item.meta }}</p>
+            </div>
+            <time>{{ item.timestamp }}</time>
+          </a>
+          {% endfor %}
+        </div>
+      </article>
+
+      <article class="dashboard-panel dashboard-panel--notifications">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Glow Alerts</h2>
+            <p>Unread notifications and system prompts surfaced as back-office alerts.</p>
+          </div>
+        </header>
+        <div class="dashboard-notification-list" data-live-notifications>
+          {% for item in notification_panels %}
+          <article class="dashboard-notification-item {% if not item.is_read %}is-unread{% endif %}">
+            <div class="dashboard-notification-head">
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.kind }}</span>
+            </div>
+            <p>{{ item.body }}</p>
+            <time>{{ item.timestamp }}</time>
+          </article>
+          {% empty %}
+          <p class="dashboard-empty-state">No notifications in the current ops queue.</p>
+          {% endfor %}
+        </div>
+      </article>
+
+      <article class="dashboard-panel dashboard-panel--audit">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Audit Timeline</h2>
+            <p>Recent back-office mutations, file operations, and workflow transitions.</p>
+          </div>
+          <a href="{% url 'admin:audit_auditlog_changelist' %}">Open full log</a>
+        </header>
+        <div class="dashboard-audit-list" data-live-audit>
+          {% for item in audit_timeline %}
+          <article class="dashboard-audit-item dashboard-audit-item--{{ item.severity }}">
+            <span class="dashboard-audit-line"></span>
+            <div>
+              <strong>{{ item.title }}</strong>
+              <p>{{ item.meta }}</p>
+            </div>
+            <time>{{ item.timestamp }}</time>
+          </article>
+          {% empty %}
+          <p class="dashboard-empty-state">Audit events will appear here as activity is recorded.</p>
+          {% endfor %}
+        </div>
+      </article>
+
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Recent Approval Escalations</h2>
+            <p>Latest SLA escalation events raised for overdue approvals.</p>
+          </div>
+          <a href="{% url 'admin-approval-queue' %}">Open approvals</a>
+        </header>
+        <div class="dashboard-audit-list">
+          {% for item in recent_approval_escalations %}
+          <a class="dashboard-audit-item dashboard-audit-item--warning" href="{{ item.href }}">
+            <span class="dashboard-audit-line"></span>
+            <div>
+              <strong>{{ item.title }}</strong>
+              <p>{{ item.meta }}</p>
+            </div>
+          </a>
+          {% empty %}
+          <p class="dashboard-empty-state">No approval escalations have been raised recently.</p>
+          {% endfor %}
+        </div>
+      </article>
+    </div>
+
+    <div class="dashboard-column dashboard-column--wide">
+      {% if role_layout.show_trends %}
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>7-Day Trends</h2>
+            <p>Track momentum across orders, prescriptions, revenue, and payments over the last week.</p>
+          </div>
+        </header>
+        <div class="dashboard-trend-grid">
+          {% for panel in trend_panels %}
+          <section class="dashboard-trend-card">
+            <div class="dashboard-trend-head">
+              <div>
+                <h3>{{ panel.title }}</h3>
+                <p>{{ panel.summary }} {{ panel.suffix }}</p>
+              </div>
+            </div>
+            <div class="dashboard-trend-bars">
+              {% for item in panel.items %}
+              <div class="dashboard-trend-bar-wrap">
+                <div class="dashboard-trend-bar" style="height: {{ item.bar_height }}%;"></div>
+                <span class="dashboard-trend-value">{{ item.value }}</span>
+                <span class="dashboard-trend-label">{{ item.label }}</span>
+              </div>
+              {% endfor %}
+            </div>
+          </section>
+          {% endfor %}
+        </div>
+      </article>
+      {% endif %}
+
+      {% if role_layout.show_recent_orders or role_layout.show_recent_prescriptions %}
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Recent Activity</h2>
+            <p>See the newest order and prescription movement without leaving the dashboard.</p>
+          </div>
+        </header>
+        <div class="dashboard-activity-grid">
+          {% if role_layout.show_recent_orders %}
+          <section class="dashboard-activity-card">
+            <div class="dashboard-activity-head">
+              <h3>Recent Orders</h3>
+              <a href="{% url 'admin:orders_order_changelist' %}">View all</a>
+            </div>
+            <div class="dashboard-data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for order in recent_orders %}
+                  <tr>
+                    <td><a href="{% url 'admin:orders_order_change' order.pk %}">{{ order.order_number }}</a></td>
+                    <td>{{ order.user }}</td>
+                    <td><span class="dashboard-status">{{ order.get_status_display }}</span></td>
+                    <td>{{ order.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+          {% endif %}
+
+          {% if role_layout.show_recent_prescriptions %}
+          <section class="dashboard-activity-card">
+            <div class="dashboard-activity-head">
+              <h3>Recent Prescriptions</h3>
+              <a href="{% url 'admin:prescriptions_prescription_changelist' %}">View all</a>
+            </div>
+            <div class="dashboard-data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Patient</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for prescription in recent_prescriptions %}
+                  <tr>
+                    <td><a href="{% url 'admin:prescriptions_prescription_change' prescription.pk %}">{{ prescription.reference_code }}</a></td>
+                    <td>{{ prescription.patient_name }}</td>
+                    <td><span class="dashboard-status">{{ prescription.get_status_display }}</span></td>
+                    <td>{{ prescription.get_review_priority_display }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+          {% endif %}
+        </div>
+      </article>
+      {% endif %}
+
+      {% if role_layout.show_backend_modules %}
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Backend Modules</h2>
+            <p>Jump into each admin area with the standard Django tools below.</p>
+          </div>
+        </header>
+        <div class="dashboard-app-grid">
+          {% for app in app_list %}
+          <section class="dashboard-app-card">
+            <header>
+              <h3>{{ app.name }}</h3>
+            </header>
+            <ul>
+              {% for model in app.models %}
+              <li>
+                {% if model.admin_url %}
+                <a href="{{ model.admin_url }}">{{ model.name }}</a>
+                {% else %}
+                <span>{{ model.name }}</span>
+                {% endif %}
+                <div class="dashboard-model-links">
+                  {% if model.add_url %}
+                  <a href="{{ model.add_url }}">Add</a>
+                  {% endif %}
+                  {% if model.admin_url %}
+                  <a href="{{ model.admin_url }}">Manage</a>
+                  {% endif %}
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+          </section>
+          {% endfor %}
+        </div>
+      </article>
+      {% endif %}
+
+      <article class="dashboard-panel dashboard-panel--ai-signature">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>AI Ops Assistant</h2>
+            <p>Adaptive triage layer monitoring queue pressure, revenue flow, and operations drift.</p>
+          </div>
+          <span class="dashboard-live-pill">Neural assist online</span>
+        </header>
+        <div class="dashboard-ai-shell">
+          <div class="dashboard-ai-copy">
+            <strong>Suggested focus</strong>
+            <p>Prioritize review queue aging, unresolved alerts, and payment retry friction before they impact customer response times.</p>
+            <div class="dashboard-indicator-row">
+              <span class="dashboard-indicator dashboard-indicator--success">Queue stable</span>
+              <span class="dashboard-indicator dashboard-indicator--warning">2 alerts warming</span>
+              <span class="dashboard-indicator dashboard-indicator--info">Forecast synced</span>
+            </div>
+          </div>
+          <div class="dashboard-waveform" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="dashboard-panel dashboard-panel--files">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>File Manager</h2>
+            <p>Upload, download, and monitor shared operational files from one neon workspace.</p>
+          </div>
+          <a href="{% url 'admin:audit_managedfile_changelist' %}">Open manager</a>
+        </header>
+        <div class="dashboard-file-grid">
+          {% for item in managed_files %}
+          <a class="dashboard-file-card" href="{{ item.href }}">
+            <strong>{{ item.title }}</strong>
+            <p>{{ item.category }}</p>
+            <div class="dashboard-file-meta">
+              <span>{{ item.size }} bytes</span>
+              <span>{{ item.downloads }} downloads</span>
+            </div>
+          </a>
+          {% empty %}
+          <p class="dashboard-empty-state">No managed files have been uploaded yet.</p>
+          {% endfor %}
+        </div>
+      </article>
+    </div>
+  </section>
+</section>
+{% endblock %}

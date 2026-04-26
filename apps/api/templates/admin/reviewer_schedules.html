@@ -1,0 +1,102 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<section class="dashboard-shell">
+  <section class="dashboard-hero">
+    <div class="dashboard-hero-copy">
+      <p class="admin-page-eyebrow">Reviewer Operations</p>
+      <h1>Reviewer Schedules</h1>
+      <p>Manage approval specialty, shifts, leave dates, and temporary availability from one place.</p>
+      <div class="dashboard-role-badges">
+        <span>{{ reviewer_rows|length }} reviewers</span>
+        <span>Admin only</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="dashboard-grid">
+    <div class="dashboard-column dashboard-column--wide">
+      <article class="dashboard-panel">
+        <header class="dashboard-panel-header">
+          <div>
+            <h2>Schedule Controls</h2>
+            <p>Update routing rules without opening each user record individually.</p>
+          </div>
+          <a href="{% url 'admin-approval-queue' %}">Back to queue</a>
+        </header>
+
+        <div style="display:grid; gap:1rem;">
+          {% for row in reviewer_rows %}
+          <form method="post" style="padding:1rem; border:1px solid rgba(0,0,0,.08); border-radius:.9rem; display:grid; gap:.85rem;">
+            {% csrf_token %}
+            <input type="hidden" name="reviewer_id" value="{{ row.reviewer.pk }}">
+            <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+              <div>
+                <strong style="display:block;">{{ row.reviewer }}</strong>
+                <span>{{ row.availability_label }}</span>
+              </div>
+              <a href="{{ row.queue_href }}">Open queue slice</a>
+            </div>
+
+            <div style="display:grid; gap:.75rem; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));">
+              <div>
+                <label><strong>Specialty</strong></label>
+                <select name="approval_specialty" style="width:100%; margin-top:.35rem;">
+                  {% for value, label in specialty_choices %}
+                  <option value="{{ value }}" {% if row.reviewer.approval_specialty == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <label style="display:flex; align-items:end; gap:.5rem;">
+                <input type="checkbox" name="approval_available_for_assignment" {% if row.reviewer.approval_available_for_assignment %}checked{% endif %}>
+                <span>Available for routing</span>
+              </label>
+              <div>
+                <label><strong>Unavailable Until</strong></label>
+                <input type="datetime-local" name="approval_unavailable_until" value="{{ row.unavailable_until_value }}" style="width:100%; margin-top:.35rem;">
+              </div>
+              <div>
+                <label><strong>Shift Start Hour</strong></label>
+                <input type="number" min="0" max="23" name="approval_shift_start_hour" value="{{ row.reviewer.approval_shift_start_hour }}" style="width:100%; margin-top:.35rem;">
+              </div>
+              <div>
+                <label><strong>Shift End Hour</strong></label>
+                <input type="number" min="0" max="23" name="approval_shift_end_hour" value="{{ row.reviewer.approval_shift_end_hour }}" style="width:100%; margin-top:.35rem;">
+              </div>
+            </div>
+
+            <div>
+              <strong style="display:block; margin-bottom:.35rem;">Working Days</strong>
+              <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+                {% for value, label in weekday_choices %}
+                <label style="display:flex; align-items:center; gap:.35rem;">
+                  <input type="checkbox" name="approval_shift_weekdays" value="{{ value }}" {% if value in row.shift_weekday_values %}checked{% endif %}>
+                  <span>{{ label }}</span>
+                </label>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div style="display:grid; gap:.75rem; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));">
+              <div>
+                <label><strong>Leave Dates</strong></label>
+                <input type="text" name="approval_leave_dates" value="{{ row.leave_dates_value }}" placeholder="YYYY-MM-DD,YYYY-MM-DD" style="width:100%; margin-top:.35rem;">
+              </div>
+              <div>
+                <strong style="display:block;">Current Load</strong>
+                <span style="display:block; margin-top:.35rem;">{{ row.assigned_count }} assigned</span>
+                <span style="display:block;">{{ row.overdue_count }} overdue</span>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+              <button type="submit" class="button default">Save reviewer schedule</button>
+            </div>
+          </form>
+          {% endfor %}
+        </div>
+      </article>
+    </div>
+  </section>
+</section>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Access Denied{% endblock %}
+
+{% block content %}
+<div class="container portal-shell d-flex align-items-center justify-content-center py-5">
+    <div class="auth-card p-5 text-center col-lg-5">
+        <div class="brand-pill mb-3"><i class="bi bi-shield-lock"></i> 403 Forbidden</div>
+        <h1 class="h3">Access denied</h1>
+        <p class="text-secondary">Your current role does not have permission to open this page.</p>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            <a href="{{ dashboard_url }}" class="btn btn-primary">Go to my dashboard</a>
+            {% if request.user.is_authenticated %}
+                <form method="post" action="{% url 'logout' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger">Logout</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

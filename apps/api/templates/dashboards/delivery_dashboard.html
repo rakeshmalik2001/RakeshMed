@@ -1,0 +1,159 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Delivery Dashboard | RakeshMed{% endblock %}
+
+{% block extra_head %}
+<style>
+    .delivery-hero {
+        background:
+            radial-gradient(circle at top right, rgba(49, 130, 206, 0.16), transparent 30%),
+            radial-gradient(circle at bottom left, rgba(246, 173, 85, 0.16), transparent 34%),
+            linear-gradient(135deg, #ffffff 0%, #f7fbff 100%);
+    }
+    .section-kicker { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--portal-accent); font-weight: 700; }
+    .panel-shell { border: 1px solid var(--portal-line); border-radius: 1rem; overflow: hidden; background: #fff; }
+    .panel-row { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 1.1rem; border-top: 1px solid var(--portal-line); }
+    .panel-row:first-child { border-top: 0; }
+    .meta { color: #6f7f8a; font-size: .92rem; }
+    .status-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: .28rem .65rem; background: rgba(49, 130, 206, 0.1); color: #2b6cb0; font-size: .8rem; font-weight: 700; }
+    .status-pill.warning { background: rgba(246, 173, 85, 0.18); color: #b96a13; }
+    .status-pill.danger { background: rgba(229, 62, 62, 0.12); color: #c53030; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid portal-shell py-4">
+    <div class="row g-4">
+        <div class="col-xl-3">
+            <div class="dashboard-card p-4 h-100">
+                <div class="brand-pill mb-4"><i class="bi bi-truck"></i> Delivery Console</div>
+                <div class="nav flex-column gap-2">
+                    {% for item in role_sidebar %}
+                        <a class="sidebar-link" href="{{ item.url }}">
+                            <i class="bi bi-{{ item.icon }}"></i>
+                            <span>{{ item.label }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{% url 'logout' %}" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-xl-9">
+            <section class="dashboard-card delivery-hero p-4 p-md-5 mb-4">
+                <div class="brand-pill mb-3"><i class="bi bi-truck-front"></i> Delivery Operations</div>
+                <h1 class="display-6 fw-semibold mb-2">Track shipment progress, field exceptions, and active delivery flow.</h1>
+                <p class="lead text-secondary mb-4">This dashboard is built for delivery agents and dispatch operations handling shipment movement, failed attempts, reattempts, and last-mile visibility.</p>
+                <div class="row g-3">
+                    {% for metric in metrics %}
+                        <div class="col-md-3 col-6">
+                            <div class="metric-tile h-100">
+                                <div class="text-secondary small text-uppercase">{{ metric.label }}</div>
+                                <div class="display-6 fw-semibold">{{ metric.value }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="section-kicker mb-2">Quick Actions</div>
+                <div class="row g-3">
+                    {% for action in quick_actions %}
+                        <div class="col-md-4">
+                            <a class="action-tile h-100" href="{{ action.url }}">
+                                <div>
+                                    <div class="fw-semibold">{{ action.label }}</div>
+                                    <div class="text-secondary small">Open the linked delivery workflow tool.</div>
+                                </div>
+                                <i class="bi bi-{{ action.icon }} fs-4 text-primary"></i>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Snapshot</div>
+                        <h2 class="h5 mb-3">Delivery pressure</h2>
+                        <div class="row g-3">
+                            {% for item in delivery_snapshot %}
+                                <div class="col-6">
+                                    <div class="metric-tile h-100">
+                                        <div class="text-secondary small text-uppercase">{{ item.label }}</div>
+                                        <div class="display-6 fw-semibold">{{ item.value }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-8">
+                    <section id="shipments" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Shipment Queue</div>
+                        <h2 class="h5 mb-3">Recent delivery shipments</h2>
+                        <div class="panel-shell">
+                            {% for shipment in recent_shipments %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ shipment.order.order_number }}</div>
+                                        <div class="meta">{{ shipment.order.recipient|default:shipment.order.user.full_name|default:shipment.order.user.phone_number }} • {{ shipment.updated_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill">{{ shipment.get_status_display }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No shipment records available yet.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <section id="exceptions" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Exceptions</div>
+                        <h2 class="h5 mb-3">Failed or returned shipments</h2>
+                        <div class="panel-shell">
+                            {% for shipment in exception_shipments %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ shipment.order.order_number }}</div>
+                                        <div class="meta">{{ shipment.failure_reason|default:shipment.status_notes|default:"Needs delivery follow-up" }}</div>
+                                    </div>
+                                    <span class="status-pill danger">{{ shipment.get_status_display }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No delivery exceptions right now.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-6">
+                    <section id="timeline" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Timeline</div>
+                        <h2 class="h5 mb-3">Active shipment movement</h2>
+                        <div class="panel-shell">
+                            {% for shipment in event_timeline %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ shipment.order.order_number }}</div>
+                                        <div class="meta">{{ shipment.carrier_name }} • {{ shipment.zone.name|default:"Zone pending" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if shipment.status == 'failed' or shipment.status == 'returned' or shipment.status == 'cancelled' %}danger{% elif shipment.status == 'queued' or shipment.status == 'assigned' %}warning{% endif %}">{{ shipment.get_status_display }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No active shipment timeline entries yet.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

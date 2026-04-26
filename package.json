@@ -1,0 +1,28 @@
+{
+  "name": "pharmacy-platform",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "clean:web": "npm --prefix apps/web run clean",
+    "dev:web": "npm --prefix apps/web run dev",
+    "build:web": "npm --prefix apps/web run build",
+    "start:web": "npm --prefix apps/web run start -- --hostname 0.0.0.0 --port 3000",
+    "lint:web": "npm --prefix apps/web run lint",
+    "typecheck:web": "npm --prefix apps/web run typecheck",
+    "test:e2e:web": "npm --prefix apps/web run test:e2e",
+    "test:e2e:web:smoke": "npm --prefix apps/web run test:e2e:smoke",
+    "test:e2e:web:ops": "npm --prefix apps/web run test:e2e:ops",
+    "test:e2e:web:extended": "npm --prefix apps/web run test:e2e:extended",
+    "dev:api": "python apps/api/manage.py runserver 0.0.0.0:8000",
+    "migrate:api": "python apps/api/manage.py migrate",
+    "makemigrations:api": "python apps/api/manage.py makemigrations",
+    "check:api": "python apps/api/manage.py check",
+    "check:migrations:api": "python apps/api/manage.py makemigrations --check --dry-run",
+    "test:api": "python apps/api/manage.py test platform_apps.users platform_apps.audit platform_apps.health platform_apps.prescriptions platform_apps.catalog platform_apps.delivery platform_apps.inventory platform_apps.orders",
+    "preflight:prod": "python scripts/preflight_production.py",
+    "loadtest:api": "python scripts/loadtest_api.py",
+    "verify": "npm run check:api && npm run check:migrations:api && npm run test:api && npm run typecheck:web && npm run build:web"
+  }
+}

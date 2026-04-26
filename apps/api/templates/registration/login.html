@@ -1,0 +1,62 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Login | RakeshMed{% endblock %}
+
+{% block extra_head %}
+<style>
+    .auth-note {
+        border: 1px solid var(--portal-line);
+        border-radius: 1rem;
+        background: rgba(238, 246, 251, 0.8);
+    }
+    .auth-cta {
+        display: flex;
+        gap: .75rem;
+        flex-wrap: wrap;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container portal-shell d-flex align-items-center py-5">
+    <div class="row justify-content-center w-100">
+        <div class="col-lg-5">
+            <div class="auth-card p-4 p-md-5">
+                <div class="brand-pill mb-3"><i class="bi bi-capsule-pill"></i> RakeshMed Secure Access</div>
+                <h1 class="h3 mb-2">Sign in to your medicine portal</h1>
+                <p class="text-secondary mb-4">Sign in once and we'll send you to the right experience for your role. Customers continue into the main shopping app, while pharmacists, vendors, admins, and super admins stay in the operations portal.</p>
+                <div class="auth-note p-3 small text-secondary mb-4">
+                    <strong class="d-block text-dark mb-1">Where you'll go after login</strong>
+                    <div>`customer` -> main frontend account</div>
+                    <div>`pharmacist`, `vendor`, `admin`, `super_admin` -> Django role dashboards</div>
+                </div>
+                <div class="auth-cta mb-4">
+                    <a href="{{ frontend_customer_account_url }}" class="btn btn-outline-primary flex-grow-1">Go to customer app</a>
+                    <a href="{{ frontend_customer_register_url }}" class="btn btn-outline-secondary flex-grow-1">Create customer account</a>
+                </div>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.email.id_for_label }}">Email or Phone</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2">Login</button>
+                </form>
+                <div class="d-flex justify-content-between mt-4 small">
+                    <a href="{% url 'password_reset' %}" class="text-decoration-none">Forgot password?</a>
+                    <a href="{% url 'register' %}" class="text-decoration-none">Vendor/Pharmacist apply</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

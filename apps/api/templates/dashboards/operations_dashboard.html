@@ -1,0 +1,215 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Operations Dashboard | RakeshMed{% endblock %}
+
+{% block extra_head %}
+<style>
+    .operations-hero {
+        background:
+            radial-gradient(circle at top right, rgba(251, 146, 60, 0.16), transparent 30%),
+            radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.12), transparent 34%),
+            linear-gradient(135deg, #ffffff 0%, #f9fbff 100%);
+    }
+    .section-kicker { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--portal-accent); font-weight: 700; }
+    .panel-shell { border: 1px solid var(--portal-line); border-radius: 1rem; overflow: hidden; background: #fff; }
+    .panel-row { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 1.1rem; border-top: 1px solid var(--portal-line); }
+    .panel-row:first-child { border-top: 0; }
+    .meta { color: #6f7f8a; font-size: .92rem; }
+    .status-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: .28rem .65rem; background: rgba(59, 130, 246, 0.1); color: #2563eb; font-size: .8rem; font-weight: 700; }
+    .status-pill.warning { background: rgba(245, 158, 11, 0.18); color: #b96a13; }
+    .status-pill.danger { background: rgba(229, 62, 62, 0.12); color: #c53030; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid portal-shell py-4">
+    <div class="row g-4">
+        <div class="col-xl-3">
+            <div class="dashboard-card p-4 h-100">
+                <div class="brand-pill mb-4"><i class="bi bi-activity"></i> Operations Console</div>
+                <div class="nav flex-column gap-2">
+                    {% for item in role_sidebar %}
+                        <a class="sidebar-link" href="{{ item.url }}">
+                            <i class="bi bi-{{ item.icon }}"></i>
+                            <span>{{ item.label }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{% url 'logout' %}" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-xl-9">
+            <section class="dashboard-card operations-hero p-4 p-md-5 mb-4">
+                <div class="brand-pill mb-3"><i class="bi bi-diagram-3"></i> Operations Control</div>
+                <h1 class="display-6 fw-semibold mb-2">Keep approvals, commerce flow, and fulfillment pressure aligned.</h1>
+                <p class="lead text-secondary mb-4">This dashboard is designed for operations managers watching onboarding bottlenecks, order throughput, inventory risk, and active shipment movement.</p>
+                <div class="row g-3">
+                    {% for metric in metrics %}
+                        <div class="col-md-3 col-6">
+                            <div class="metric-tile h-100">
+                                <div class="text-secondary small text-uppercase">{{ metric.label }}</div>
+                                <div class="display-6 fw-semibold">{{ metric.value }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="section-kicker mb-2">Quick Actions</div>
+                <div class="row g-3">
+                    {% for action in quick_actions %}
+                        <div class="col-md-4">
+                            <a class="action-tile h-100" href="{{ action.url }}">
+                                <div>
+                                    <div class="fw-semibold">{{ action.label }}</div>
+                                    <div class="text-secondary small">Open the linked operations workflow tool.</div>
+                                </div>
+                                <i class="bi bi-{{ action.icon }} fs-4 text-primary"></i>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4">
+                    <section id="approvals" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Approvals</div>
+                        <h2 class="h5 mb-3">Approval flow snapshot</h2>
+                        <div class="row g-3">
+                            {% for item in approval_snapshot %}
+                                <div class="col-6">
+                                    <div class="metric-tile h-100">
+                                        <div class="text-secondary small text-uppercase">{{ item.label }}</div>
+                                        <div class="display-6 fw-semibold">{{ item.value }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-4">
+                    <section id="orders" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Orders</div>
+                        <h2 class="h5 mb-3">Commerce throughput</h2>
+                        <div class="row g-3">
+                            {% for item in order_snapshot %}
+                                <div class="col-6">
+                                    <div class="metric-tile h-100">
+                                        <div class="text-secondary small text-uppercase">{{ item.label }}</div>
+                                        <div class="display-6 fw-semibold">{{ item.value }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-4">
+                    <section id="fulfillment" class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Fulfillment</div>
+                        <h2 class="h5 mb-3">Stock and shipment pressure</h2>
+                        <div class="row g-3">
+                            {% for item in fulfillment_snapshot %}
+                                <div class="col-6">
+                                    <div class="metric-tile h-100">
+                                        <div class="text-secondary small text-uppercase">{{ item.label }}</div>
+                                        <div class="display-6 fw-semibold">{{ item.value }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Pending Requests</div>
+                        <h2 class="h5 mb-3">Approvals needing attention</h2>
+                        <div class="panel-shell">
+                            {% for user in pending_approval_users %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ user.full_name|default:user.email|default:user.phone_number }}</div>
+                                        <div class="meta">{{ user.role|title }} | due {{ user.approval_due_at|date:"d M Y, H:i"|default:"Not set" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if user.approval_due_at and user.approval_due_at < now %}warning{% endif %}">
+                                        {% if user.approval_assigned_to %}{{ user.approval_assigned_to.full_name|default:user.approval_assigned_to.email }}{% else %}Unassigned{% endif %}
+                                    </span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No pending approval requests right now.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-6">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Recent Orders</div>
+                        <h2 class="h5 mb-3">Latest commerce activity</h2>
+                        <div class="panel-shell">
+                            {% for order in recent_orders %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ order.order_number }}</div>
+                                        <div class="meta">{{ order.user.full_name|default:order.user.phone_number }} | {{ order.created_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if order.status == 'pending_prescription_review' %}warning{% elif order.status == 'cancelled' %}danger{% endif %}">{{ order.get_status_display }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No recent orders available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Inventory Risk</div>
+                        <h2 class="h5 mb-3">Lowest stock rows</h2>
+                        <div class="panel-shell">
+                            {% for item in top_inventory_risks %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ item.product.name }}</div>
+                                        <div class="meta">{{ item.location.name|default:"Default location" }}</div>
+                                    </div>
+                                    <span class="status-pill warning">{{ item.quantity_on_hand }} on hand</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No inventory risk rows available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-6">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Delivery Queue</div>
+                        <h2 class="h5 mb-3">Active shipment movement</h2>
+                        <div class="panel-shell">
+                            {% for shipment in delivery_queue %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ shipment.order.order_number }}</div>
+                                        <div class="meta">{{ shipment.zone.name|default:"Zone pending" }} | {{ shipment.updated_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if shipment.status == 'failed' %}danger{% elif shipment.status == 'queued' or shipment.status == 'assigned' %}warning{% endif %}">{{ shipment.get_status_display }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No active shipment movement available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

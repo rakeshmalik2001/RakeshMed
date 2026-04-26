@@ -1,0 +1,176 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Vendor Staff Dashboard | RakeshMed{% endblock %}
+
+{% block extra_head %}
+<style>
+    .vendor-staff-hero {
+        background:
+            radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 30%),
+            radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.10), transparent 34%),
+            linear-gradient(135deg, #ffffff 0%, #f7fbff 100%);
+    }
+    .section-kicker { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--portal-accent); font-weight: 700; }
+    .panel-shell { border: 1px solid var(--portal-line); border-radius: 1rem; overflow: hidden; background: #fff; }
+    .panel-row { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 1.1rem; border-top: 1px solid var(--portal-line); }
+    .panel-row:first-child { border-top: 0; }
+    .meta { color: #6f7f8a; font-size: .92rem; }
+    .status-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: .28rem .65rem; background: rgba(14, 165, 233, 0.12); color: #0284c7; font-size: .8rem; font-weight: 700; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid portal-shell py-4">
+    <div class="row g-4">
+        <div class="col-xl-3">
+            <div class="dashboard-card p-4 h-100">
+                <div class="brand-pill mb-4"><i class="bi bi-shop-window"></i> Vendor Staff Console</div>
+                <div class="nav flex-column gap-2">
+                    {% for item in role_sidebar %}
+                        <a class="sidebar-link" href="{{ item.url }}">
+                            <i class="bi bi-{{ item.icon }}"></i>
+                            <span>{{ item.label }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{% url 'logout' %}" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-xl-9">
+            <section class="dashboard-card vendor-staff-hero p-4 p-md-5 mb-4">
+                <div class="brand-pill mb-3"><i class="bi bi-bag-check"></i> Store Staff Workflow</div>
+                <h1 class="display-6 fw-semibold mb-2">Vendor Staff Dashboard</h1>
+                <p class="lead text-secondary mb-4">Track assigned store work, watch low stock rows, and stay on top of day-to-day counter operations from a focused staff console.</p>
+                <div class="row g-3">
+                    {% for metric in metrics %}
+                        <div class="col-md-3 col-6">
+                            <div class="metric-tile h-100">
+                                <div class="text-secondary small text-uppercase">{{ metric.label }}</div>
+                                <div class="display-6 fw-semibold">{{ metric.value }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="mb-4">
+                <div class="section-kicker mb-2">Quick Actions</div>
+                <div class="row g-3">
+                    {% for action in quick_actions %}
+                        <div class="col-md-4">
+                            <a class="action-tile h-100" href="{{ action.url }}">
+                                <div>
+                                    <div class="fw-semibold">{{ action.label }}</div>
+                                    <div class="text-secondary small">Open the linked store workflow endpoint.</div>
+                                </div>
+                                <i class="bi bi-{{ action.icon }} fs-4 text-primary"></i>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <div class="row g-4 mb-4" id="counter">
+                <div class="col-lg-4">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Counter Snapshot</div>
+                        <h2 class="h5 mb-3">Current store pressure</h2>
+                        <div class="row g-3">
+                            {% for item in counter_snapshot %}
+                                <div class="col-6">
+                                    <div class="metric-tile h-100">
+                                        <div class="text-secondary small text-uppercase">{{ item.label }}</div>
+                                        <div class="display-6 fw-semibold">{{ item.value }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-8" id="orders">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Assigned Orders</div>
+                        <h2 class="h5 mb-3">Recent store-side order queue</h2>
+                        <div class="panel-shell">
+                            {% for order in assigned_orders %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ order.order_number }}</div>
+                                        <div class="meta">{{ order.user.full_name|default:order.user.phone_number }} | {{ order.updated_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill">{{ order.status }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No assigned store orders available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-4" id="stock">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Stock Watch</div>
+                        <h2 class="h5 mb-3">Low stock rows</h2>
+                        <div class="panel-shell">
+                            {% for row in low_stock_rows %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ row.product.name|default:"Inventory row" }}</div>
+                                        <div class="meta">{{ row.location.name|default:"Unknown location" }}</div>
+                                    </div>
+                                    <span class="status-pill">{{ row.quantity_on_hand }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No low stock rows available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-4">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Recent Movements</div>
+                        <h2 class="h5 mb-3">Latest inventory activity</h2>
+                        <div class="panel-shell">
+                            {% for movement in recent_movements %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ movement.product.name }}</div>
+                                        <div class="meta">{{ movement.location.name }} | {{ movement.created_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill">{{ movement.get_movement_type_display }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No recent stock movements available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+                <div class="col-lg-4" id="catalog">
+                    <section class="dashboard-card p-4 h-100">
+                        <div class="section-kicker mb-2">Catalog</div>
+                        <h2 class="h5 mb-3">Recently updated products</h2>
+                        <div class="panel-shell">
+                            {% for product in recent_products %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="fw-semibold">{{ product.name }}</div>
+                                        <div class="meta">{{ product.category.name }} | {{ product.manufacturer|default:"Manufacturer not set" }}</div>
+                                    </div>
+                                    <span class="status-pill">{{ product.get_stock_status_display }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="panel-row"><div class="meta">No catalog products available.</div></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

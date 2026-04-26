@@ -1,0 +1,39 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://127.0.0.1:3000",
+      "localStorage": [
+        {
+          "name": "rakeshmed-auth-token",
+          "value": "playwright-token"
+        },
+        {
+          "name": "rakeshmed-auth-user",
+          "value": "{\"id\":1,\"phone_number\":\"7002579537\",\"full_name\":\"Playwright User\",\"role\":\"customer\",\"is_phone_verified\":true,\"session_expires_at\":\"2099-01-01T00:00:00Z\"}"
+        },
+        {
+          "name": "rakeshmed-auth-expires-at",
+          "value": "2099-01-01T00:00:00Z"
+        }
+      ]
+    },
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "rakeshmed-auth-token",
+          "value": "playwright-token"
+        },
+        {
+          "name": "rakeshmed-auth-user",
+          "value": "{\"id\":1,\"phone_number\":\"7002579537\",\"full_name\":\"Playwright User\",\"role\":\"customer\",\"is_phone_verified\":true,\"session_expires_at\":\"2099-01-01T00:00:00Z\"}"
+        },
+        {
+          "name": "rakeshmed-auth-expires-at",
+          "value": "2099-01-01T00:00:00Z"
+        }
+      ]
+    }
+  ]
+}

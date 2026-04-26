@@ -1,0 +1,55 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Verify Sign In | RakeshMed{% endblock %}
+
+{% block extra_head %}
+<style>
+    .mfa-note {
+        border: 1px solid var(--portal-line);
+        border-radius: 1rem;
+        background: rgba(238, 246, 251, 0.8);
+    }
+    .mfa-actions {
+        display: flex;
+        gap: .75rem;
+        flex-wrap: wrap;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container portal-shell d-flex align-items-center py-5">
+    <div class="row justify-content-center w-100">
+        <div class="col-lg-5">
+            <div class="auth-card p-4 p-md-5">
+                <div class="brand-pill mb-3"><i class="bi bi-shield-lock"></i> Additional Verification</div>
+                <h1 class="h3 mb-2">Complete multi-factor sign in</h1>
+                <p class="text-secondary mb-4">Enter the 6-digit verification code we sent to <strong>{{ masked_identifier }}</strong> to finish signing in to the staff portal.</p>
+                <div class="mfa-note p-3 small text-secondary mb-4">
+                    <strong class="d-block text-dark mb-1">Security reminder</strong>
+                    <div>This one-time code expires in 5 minutes and protects privileged access to your portal account.</div>
+                </div>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.code.id_for_label }}">Verification code</label>
+                        {{ form.code }}
+                        {% if form.code.errors %}<div class="text-danger small mt-1">{{ form.code.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="mfa-actions">
+                        <button type="submit" class="btn btn-primary flex-grow-1 py-2">Verify and continue</button>
+                        <button type="submit" name="action" value="resend" class="btn btn-outline-secondary flex-grow-1 py-2" {% if not resend_ready %}disabled{% endif %}>Resend code</button>
+                    </div>
+                </form>
+                <div class="d-flex justify-content-between mt-4 small">
+                    <a href="{% url 'login' %}" class="text-decoration-none">Back to login</a>
+                    <span class="text-secondary">{% if resend_ready %}Need a fresh code?{% else %}Please wait before resending.{% endif %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

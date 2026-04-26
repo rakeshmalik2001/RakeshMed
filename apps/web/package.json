@@ -1,0 +1,32 @@
+{
+  "name": "web",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "clean": "node ./scripts/clean-next.mjs",
+    "dev": "node ./scripts/start-dev.mjs",
+    "prebuild": "npm run clean",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test customer-flow.spec.ts auth-flow.spec.ts prescription-flow.spec.ts",
+    "test:e2e:ops": "playwright test ops-flow.spec.ts admin-orders.spec.ts pharmacist-detail.spec.ts",
+    "test:e2e:extended": "playwright test upload-prescription.spec.ts admin-order-detail.spec.ts finance-flow.spec.ts",
+    "test:e2e:headed": "playwright test --headed"
+  },
+  "dependencies": {
+    "next": "15.3.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-icons": "^5.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.2",
+    "@types/react": "19.1.2",
+    "@types/react-dom": "19.1.2",
+    "@playwright/test": "^1.54.2",
+    "typescript": "5.8.3"
+  }
+}

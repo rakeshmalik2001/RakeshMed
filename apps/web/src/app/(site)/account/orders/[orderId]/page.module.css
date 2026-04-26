@@ -1,0 +1,347 @@
+.detailPage {
+  width: min(100%, 1240px);
+  margin: 0 auto;
+  display: grid;
+  gap: 22px;
+}
+
+.breadcrumb {
+  color: #6e8098;
+  font-size: 14px;
+}
+
+.detailShell {
+  display: grid;
+  gap: 24px;
+  padding: 28px;
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at top right, rgba(65, 143, 255, 0.14), transparent 28%),
+    linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+  border: 1px solid #d8e6f8;
+  box-shadow: 0 18px 38px rgba(58, 100, 169, 0.08);
+}
+
+.heroHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.heroTitle {
+  margin-bottom: 10px;
+}
+
+.heroCopy {
+  max-width: 760px;
+  margin: 0;
+  color: #667b96;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.heroActions,
+.actionRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.primaryAction,
+.secondaryAction,
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 800;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  cursor: pointer;
+  font: inherit;
+}
+
+.primaryAction,
+.primaryButton {
+  border: 0;
+  background: linear-gradient(180deg, #327af1 0%, #1f6fe5 100%);
+  color: #fff;
+  box-shadow: 0 14px 24px rgba(31, 111, 229, 0.18);
+}
+
+.secondaryAction,
+.secondaryButton {
+  border: 1px solid #d6e4f5;
+  background: #fff;
+  color: #29486c;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.summaryCard,
+.panel {
+  border: 1px solid #d8e6f8;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 14px 30px rgba(57, 108, 184, 0.08);
+}
+
+.summaryCard {
+  display: grid;
+  gap: 8px;
+  min-height: 160px;
+  padding: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(31, 111, 229, 0.08), transparent 28%),
+    linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.summaryCard p,
+.panelKicker,
+.infoCard span {
+  margin: 0;
+  color: #6d83a3;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.summaryCard strong {
+  color: #17304b;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.6vw, 42px);
+  line-height: 1.05;
+}
+
+.summaryCard span {
+  color: #667b96;
+  line-height: 1.6;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.panel {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.panelHeader h2 {
+  margin: 4px 0 0;
+  color: #16314c;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.infoStack,
+.billingGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.billingGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.infoCard,
+.gatewayCard,
+.alertCard {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid #dfebf8;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.gatewayCard {
+  background:
+    radial-gradient(circle at top right, rgba(31, 111, 229, 0.08), transparent 28%),
+    linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+}
+
+.alertCard {
+  background: linear-gradient(180deg, #fff8f2 0%, #fffdfb 100%);
+  border-color: #f3dcc5;
+}
+
+.infoCard strong,
+.gatewayCard strong,
+.alertCard strong,
+.timelineContent strong,
+.listRow strong {
+  color: #203851;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.infoCard p,
+.gatewayCard p,
+.alertCard p,
+.timelineContent p,
+.listRow p,
+.helperText,
+.emptyState {
+  margin: 0;
+  color: #667b96;
+  line-height: 1.6;
+}
+
+.positiveValue {
+  color: #188953 !important;
+}
+
+.listShell {
+  display: grid;
+  border: 1px solid #dce8f7;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.listRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-top: 1px solid #e4edf8;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.listRow:first-child {
+  border-top: 0;
+}
+
+.priceValue,
+.infoBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.priceValue {
+  color: #17304b;
+  font-weight: 800;
+}
+
+.infoBadge {
+  background: #ecf4ff;
+  color: #235fd8;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.timelineList {
+  display: grid;
+  gap: 16px;
+}
+
+.timelineItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+  padding: 16px 18px;
+  border: 1px solid #dfebf8;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.timelineDot {
+  width: 14px;
+  height: 14px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #327af1 0%, #1f6fe5 100%);
+  box-shadow: 0 0 0 6px rgba(31, 111, 229, 0.08);
+}
+
+.timelineItem > span {
+  color: #6d83a3;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.inlineInput {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid #d6e4f5;
+  border-radius: 16px;
+  background: #fff;
+  color: #29486c;
+  font: inherit;
+}
+
+@media (max-width: 1080px) {
+  .summaryGrid,
+  .detailGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .detailShell,
+  .summaryCard,
+  .panel {
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  .summaryGrid,
+  .detailGrid,
+  .billingGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .heroActions,
+  .actionRow {
+    flex-direction: column;
+  }
+
+  .primaryAction,
+  .secondaryAction,
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+  }
+
+  .listRow,
+  .timelineItem {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .timelineDot {
+    display: none;
+  }
+
+  .timelineItem > span {
+    white-space: normal;
+  }
+}

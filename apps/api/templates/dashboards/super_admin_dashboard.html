@@ -1,0 +1,2287 @@
+{% extends "portal/base.html" %}
+{% load static %}
+
+{% block title %}Super Admin Dashboard | RakeshMed{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        --sa-bg: #f4f7fb;
+        --sa-surface: rgba(255, 255, 255, 0.82);
+        --sa-surface-strong: #ffffff;
+        --sa-surface-soft: rgba(244, 248, 252, 0.92);
+        --sa-border: rgba(20, 48, 66, 0.09);
+        --sa-border-strong: rgba(20, 48, 66, 0.14);
+        --sa-text: #173246;
+        --sa-text-soft: #687b88;
+        --sa-title: #102737;
+        --sa-blue: #2f80ed;
+        --sa-teal: #18a0a6;
+        --sa-green: #1f9c62;
+        --sa-orange: #f18a4f;
+        --sa-red: #c34949;
+        --sa-shadow-lg: 0 30px 70px rgba(22, 43, 58, 0.10);
+        --sa-shadow-md: 0 18px 38px rgba(22, 43, 58, 0.08);
+        --sa-shadow-sm: 0 10px 22px rgba(22, 43, 58, 0.05);
+        --sa-radius-xl: 28px;
+        --sa-radius-lg: 22px;
+        --sa-radius-md: 18px;
+        --sa-radius-sm: 14px;
+    }
+    html {
+        scroll-behavior: smooth;
+    }
+    body {
+        background:
+            radial-gradient(circle at top left, rgba(47, 128, 237, 0.16), transparent 34%),
+            radial-gradient(circle at top right, rgba(24, 160, 166, 0.14), transparent 28%),
+            linear-gradient(180deg, #f8fbff 0%, #f2f7fb 46%, #edf4f9 100%);
+        color: var(--sa-text);
+        transition: background .24s ease, color .24s ease;
+    }
+    body[data-theme="dark"] {
+        --sa-bg: #0c1520;
+        --sa-surface: rgba(17, 25, 37, 0.82);
+        --sa-surface-strong: #111c28;
+        --sa-surface-soft: rgba(16, 25, 36, 0.88);
+        --sa-border: rgba(130, 155, 184, 0.12);
+        --sa-border-strong: rgba(130, 155, 184, 0.18);
+        --sa-text: #e8f0f8;
+        --sa-text-soft: #97a9b9;
+        --sa-title: #f6fbff;
+        --sa-blue: #60a5fa;
+        --sa-teal: #4fd1c5;
+        --sa-green: #47c985;
+        --sa-orange: #f3a266;
+        --sa-red: #ff7c7c;
+        --sa-shadow-lg: 0 26px 64px rgba(0, 0, 0, 0.35);
+        --sa-shadow-md: 0 18px 40px rgba(0, 0, 0, 0.28);
+        --sa-shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.22);
+        background:
+            radial-gradient(circle at top left, rgba(96, 165, 250, 0.12), transparent 28%),
+            radial-gradient(circle at top right, rgba(79, 209, 197, 0.10), transparent 24%),
+            linear-gradient(180deg, #08111a 0%, #0a131d 40%, #0f1a25 100%);
+    }
+    .superadmin-shell {
+        width: min(100%, 1600px);
+        margin: 0 auto;
+        padding: 1.1rem 1rem 2rem;
+    }
+    .shell-grid {
+        display: grid;
+        grid-template-columns: 96px minmax(0, 1fr);
+        gap: 1.15rem;
+        align-items: start;
+        transition: grid-template-columns .24s ease;
+    }
+    .shell-grid:has(.dashboard-sidebar:hover) {
+        grid-template-columns: 280px minmax(0, 1fr);
+    }
+    .surface {
+        background: var(--sa-surface);
+        border: 1px solid var(--sa-border);
+        box-shadow: var(--sa-shadow-sm);
+        backdrop-filter: blur(22px);
+    }
+    .surface-strong {
+        background: var(--sa-surface-strong);
+    }
+    .rounded-xl { border-radius: var(--sa-radius-xl); }
+    .rounded-lg { border-radius: var(--sa-radius-lg); }
+    .rounded-md { border-radius: var(--sa-radius-md); }
+    .dashboard-sidebar {
+        position: sticky;
+        top: 1rem;
+        padding: 1rem;
+        width: 100%;
+        max-height: calc(100vh - 2rem);
+        overflow-x: hidden;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(47, 128, 237, 0.45) transparent;
+        transition: box-shadow .24s ease, background .24s ease;
+        z-index: 6;
+    }
+    .dashboard-sidebar::-webkit-scrollbar {
+        width: 8px;
+    }
+    .dashboard-sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .dashboard-sidebar::-webkit-scrollbar-thumb {
+        background: rgba(47, 128, 237, 0.32);
+        border-radius: 999px;
+    }
+    .dashboard-sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(47, 128, 237, 0.5);
+    }
+    .dashboard-sidebar:hover {
+        box-shadow: var(--sa-shadow-md);
+    }
+    .main-column > section[id],
+    .main-column > div[id],
+    .main-column > header[id] {
+        scroll-margin-top: 12rem;
+    }
+    .sidebar-brand {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .brand-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .75rem;
+        justify-content: center;
+        width: 2.15rem;
+        height: 2.15rem;
+        min-height: 2.15rem;
+        padding: 0;
+        border-radius: 12px;
+        background: rgba(47, 128, 237, 0.08);
+        border: 1px solid rgba(47, 128, 237, 0.10);
+        color: var(--sa-title);
+        font-weight: 700;
+        overflow: hidden;
+        margin: 0 0 0 .9rem;
+        transition: width .2s ease, height .2s ease, padding .2s ease, border-radius .2s ease, background .2s ease;
+    }
+    .dashboard-sidebar:hover .brand-badge {
+        justify-content: flex-start;
+        width: 100%;
+        height: auto;
+        padding: .85rem 1rem;
+        margin-left: 0;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(47, 128, 237, 0.12), rgba(24, 160, 166, 0.12));
+    }
+    .brand-mark {
+        width: 1.65rem;
+        height: 1.65rem;
+        min-width: 1.65rem;
+        flex: 0 0 1.65rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: transparent;
+        color: var(--sa-blue);
+        font-size: .8rem;
+        position: relative;
+        z-index: 1;
+    }
+    .dashboard-sidebar:hover .brand-mark {
+        width: 2.5rem;
+        height: 2.5rem;
+        min-width: 2.5rem;
+        flex-basis: 2.5rem;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--sa-blue), var(--sa-teal));
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(47, 128, 237, 0.22);
+    }
+    .brand-badge .sidebar-copy {
+        width: 0;
+        max-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+    .dashboard-sidebar:hover .brand-badge .sidebar-copy {
+        width: auto;
+        max-width: 14rem;
+    }
+    .nav-kicker {
+        font-size: .72rem;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        color: var(--sa-text-soft);
+        font-weight: 700;
+        margin: .9rem .2rem .65rem;
+    }
+    .menu-list {
+        display: grid;
+        gap: .42rem;
+    }
+    .menu-link {
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        padding: .82rem .9rem;
+        border-radius: 16px;
+        color: var(--sa-text);
+        text-decoration: none;
+        font-weight: 600;
+        transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+        border: 1px solid transparent;
+    }
+    .menu-link:hover,
+    .menu-link:focus,
+    .dashboard-sidebar:hover .menu-link.active {
+        background: linear-gradient(135deg, rgba(47, 128, 237, 0.12), rgba(24, 160, 166, 0.08));
+        border-color: rgba(47, 128, 237, 0.12);
+        color: var(--sa-title);
+        transform: translateX(2px);
+    }
+    .sidebar-copy,
+    .sidebar-label,
+    .sidebar-note,
+    .dashboard-sidebar .nav-kicker {
+        opacity: 0;
+        transform: translateX(-8px);
+        transition: opacity .18s ease, transform .18s ease;
+        pointer-events: none;
+    }
+    .dashboard-sidebar:hover .sidebar-copy,
+    .dashboard-sidebar:hover .sidebar-label,
+    .dashboard-sidebar:hover .sidebar-note,
+    .dashboard-sidebar:hover .nav-kicker {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+    }
+    .dashboard-sidebar .nav-kicker {
+        max-height: 0;
+        overflow: hidden;
+        margin: 0 .2rem;
+        transition: max-height .18s ease, opacity .18s ease, transform .18s ease, margin .18s ease;
+    }
+    .dashboard-sidebar:hover .nav-kicker {
+        max-height: 2rem;
+        margin: .9rem .2rem .65rem;
+    }
+    .menu-icon {
+        width: 2rem;
+        height: 2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: rgba(47, 128, 237, 0.08);
+        color: var(--sa-blue);
+        font-size: 1rem;
+    }
+    .sidebar-note {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: linear-gradient(180deg, rgba(47, 128, 237, 0.08), rgba(24, 160, 166, 0.08));
+        border: 1px solid rgba(47, 128, 237, 0.10);
+        border-radius: 18px;
+        max-height: 0;
+        margin-top: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        overflow: hidden;
+        transition: max-height .18s ease, margin .18s ease, padding .18s ease, opacity .18s ease, transform .18s ease;
+    }
+    .dashboard-sidebar:hover .sidebar-note {
+        max-height: 300px;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+    .sidebar-note p {
+        margin: .45rem 0 0;
+        font-size: .92rem;
+        color: var(--sa-text-soft);
+    }
+    .main-column {
+        min-width: 0;
+    }
+    .topbar {
+        position: sticky;
+        top: .9rem;
+        z-index: 30;
+        padding: .9rem 1rem;
+        margin-bottom: 1rem;
+    }
+    .topbar-inner {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+    .topbar-left,
+    .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: .8rem;
+        flex-wrap: wrap;
+    }
+    .topbar-title {
+        display: flex;
+        flex-direction: column;
+        gap: .15rem;
+    }
+    .topbar-title small {
+        color: var(--sa-text-soft);
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        font-weight: 700;
+        font-size: .72rem;
+    }
+    .topbar-title strong {
+        color: var(--sa-title);
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+    .search-shell {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+        min-width: min(100%, 420px);
+        padding: .8rem 1rem;
+        border-radius: 18px;
+        background: var(--sa-surface-soft);
+        border: 1px solid var(--sa-border);
+    }
+    .search-shell input {
+        border: 0;
+        outline: 0;
+        background: transparent;
+        width: 100%;
+        color: var(--sa-text);
+    }
+    .search-shell input::placeholder {
+        color: var(--sa-text-soft);
+    }
+    .hero-range-select {
+        min-height: 2.9rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.10);
+        color: #fff;
+        padding: 0 1rem;
+        font-weight: 700;
+        backdrop-filter: blur(10px);
+    }
+    .hero-range-select option {
+        color: #102737;
+    }
+    .icon-btn,
+    .theme-btn {
+        width: 2.9rem;
+        height: 2.9rem;
+        border-radius: 16px;
+        border: 1px solid var(--sa-border);
+        background: var(--sa-surface-soft);
+        color: var(--sa-title);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    }
+    .profile-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .8rem;
+        padding: .48rem .65rem .48rem .48rem;
+        border-radius: 999px;
+        border: 1px solid var(--sa-border);
+        background: var(--sa-surface-soft);
+        color: var(--sa-title);
+        text-decoration: none;
+        font-weight: 700;
+    }
+    .avatar-dot {
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--sa-blue), var(--sa-teal));
+        color: #fff;
+        box-shadow: 0 10px 24px rgba(47, 128, 237, 0.24);
+    }
+    .hero-panel {
+        position: relative;
+        overflow: hidden;
+        padding: 1.4rem;
+        margin-bottom: 1rem;
+        border-radius: 30px;
+        background:
+            radial-gradient(circle at top right, rgba(255, 255, 255, 0.24), transparent 28%),
+            radial-gradient(circle at bottom left, rgba(79, 209, 197, 0.16), transparent 24%),
+            linear-gradient(140deg, #102a3d 0%, #173d58 48%, #1e5e73 100%);
+        color: #fff;
+        box-shadow: var(--sa-shadow-lg);
+    }
+    .hero-panel::after {
+        content: "";
+        position: absolute;
+        inset: auto -5% -24% auto;
+        width: 340px;
+        height: 340px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.18) 0%, transparent 66%);
+        pointer-events: none;
+    }
+    .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(340px, .9fr);
+        gap: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+    .hero-copy {
+        max-width: 760px;
+    }
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .55rem;
+        padding: .38rem .78rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        font-size: .8rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+    .hero-copy h1 {
+        margin: 1rem 0 .75rem;
+        font-size: clamp(2rem, 4vw, 3.4rem);
+        line-height: 1.02;
+        font-weight: 800;
+        letter-spacing: -.04em;
+    }
+    .hero-copy p {
+        color: rgba(255, 255, 255, 0.76);
+        font-size: 1rem;
+        line-height: 1.75;
+        margin-bottom: 1rem;
+    }
+    .hero-insight {
+        display: grid;
+        gap: .7rem;
+        margin-bottom: 1rem;
+    }
+    .hero-insight-item {
+        display: flex;
+        align-items: flex-start;
+        gap: .75rem;
+        padding: .72rem .85rem;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.09);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+    }
+    .hero-insight-item i {
+        color: #9be4dd;
+    }
+    .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .7rem;
+    }
+    .hero-btn-primary,
+    .hero-btn-secondary,
+    .quick-action {
+        border-radius: 999px;
+        font-weight: 700;
+        padding: .82rem 1.1rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: .55rem;
+        transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .hero-btn-primary:hover,
+    .hero-btn-secondary:hover,
+    .quick-action:hover {
+        transform: translateY(-1px);
+    }
+    .hero-btn-primary {
+        background: #fff;
+        color: #173246;
+        box-shadow: 0 16px 28px rgba(14, 31, 43, 0.22);
+    }
+    .hero-btn-secondary {
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.10);
+    }
+    .hero-side {
+        display: grid;
+        gap: .85rem;
+    }
+    .hero-side-top {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .85rem;
+    }
+    .hero-stat,
+    .hero-status-card {
+        border-radius: 22px;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.11);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(16px);
+    }
+    .hero-stat-label {
+        color: rgba(255, 255, 255, 0.68);
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        font-weight: 700;
+        font-size: .76rem;
+    }
+    .hero-stat-value {
+        font-size: 2.1rem;
+        line-height: 1;
+        font-weight: 800;
+        margin-top: .55rem;
+    }
+    .hero-stat-note {
+        margin-top: .45rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: .92rem;
+    }
+    .hero-status-grid {
+        display: grid;
+        gap: .7rem;
+    }
+    .hero-status-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .health-dot {
+        width: .7rem;
+        height: .7rem;
+        border-radius: 50%;
+        display: inline-block;
+        background: var(--sa-green);
+        box-shadow: 0 0 0 5px rgba(71, 201, 133, 0.18);
+    }
+    .hero-status-name {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        font-weight: 700;
+    }
+    .hero-status-value {
+        color: rgba(255, 255, 255, 0.74);
+    }
+    .focus-bar {
+        position: sticky;
+        top: 5.9rem;
+        z-index: 18;
+        padding: 1rem 1.05rem;
+        margin-bottom: 1rem;
+    }
+    .focus-row,
+    .focus-row-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .9rem;
+        flex-wrap: wrap;
+    }
+    .focus-row-bottom {
+        margin-top: .85rem;
+        padding-top: .85rem;
+        border-top: 1px solid var(--sa-border);
+    }
+    .tab-row,
+    .chip-row,
+    .command-tools {
+        display: flex;
+        gap: .55rem;
+        flex-wrap: wrap;
+    }
+    .focus-pill,
+    .jump-chip,
+    .tool-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        min-height: 2.5rem;
+        padding: 0 .92rem;
+        border-radius: 999px;
+        border: 1px solid var(--sa-border);
+        background: var(--sa-surface-soft);
+        color: var(--sa-text);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: .9rem;
+    }
+    .focus-pill.active,
+    .jump-chip.active {
+        color: var(--sa-title);
+        background: linear-gradient(135deg, rgba(47, 128, 237, 0.14), rgba(24, 160, 166, 0.12));
+        border-color: rgba(47, 128, 237, 0.14);
+    }
+    .count-badge {
+        min-width: 1.55rem;
+        height: 1.55rem;
+        padding: 0 .32rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(47, 128, 237, 0.12);
+        color: var(--sa-blue);
+        font-size: .76rem;
+        font-weight: 800;
+    }
+    .meta-row {
+        display: flex;
+        gap: .8rem;
+        align-items: center;
+        flex-wrap: wrap;
+        color: var(--sa-text-soft);
+        font-size: .88rem;
+    }
+    .refresh-select {
+        min-height: 2.5rem;
+        border-radius: 999px;
+        background: var(--sa-surface-soft);
+        color: var(--sa-title);
+        border: 1px solid var(--sa-border);
+        padding: 0 .9rem;
+        font-weight: 700;
+    }
+    .critical-strip,
+    .kpi-grid,
+    .analytics-grid,
+    .operations-grid,
+    .activity-grid,
+    .status-grid,
+    .staff-grid {
+        display: grid;
+        gap: 1rem;
+    }
+    .critical-strip {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-bottom: 1rem;
+    }
+    .signal-card,
+    .kpi-card,
+    .chart-card,
+    .section-card,
+    .status-card,
+    .action-card {
+        border-radius: var(--sa-radius-lg);
+        border: 1px solid var(--sa-border);
+        background: var(--sa-surface);
+        box-shadow: var(--sa-shadow-sm);
+        backdrop-filter: blur(18px);
+        transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
+    }
+    .signal-card,
+    .kpi-card,
+    .status-card {
+        padding: 1.1rem 1.15rem;
+        text-decoration: none;
+        color: inherit;
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .signal-card:hover,
+    .kpi-card:hover,
+    .action-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--sa-shadow-md);
+    }
+    .signal-card.danger {
+        background: linear-gradient(180deg, rgba(255, 245, 245, 0.98), rgba(255, 238, 238, 0.94));
+    }
+    .signal-card.warning {
+        background: linear-gradient(180deg, rgba(255, 249, 243, 0.98), rgba(255, 242, 234, 0.94));
+    }
+    body[data-theme="dark"] .signal-card.danger,
+    body[data-theme="dark"] .signal-card.warning {
+        background: var(--sa-surface-soft);
+    }
+    .signal-label,
+    .card-kicker {
+        font-size: .76rem;
+        letter-spacing: .10em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--sa-text-soft);
+    }
+    .signal-value {
+        margin-top: .5rem;
+        font-size: 2rem;
+        line-height: 1;
+        font-weight: 800;
+        color: var(--sa-title);
+    }
+    .signal-trend {
+        margin-top: .65rem;
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        font-size: .86rem;
+        font-weight: 700;
+    }
+    .signal-trend.up { color: var(--sa-red); }
+    .signal-trend.down { color: var(--sa-green); }
+    .signal-trend.flat { color: var(--sa-text-soft); }
+    .kpi-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        margin-bottom: 1rem;
+    }
+    .kpi-header {
+        display: flex;
+        justify-content: space-between;
+        gap: .7rem;
+        align-items: flex-start;
+    }
+    .kpi-icon {
+        width: 2.8rem;
+        height: 2.8rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(47, 128, 237, 0.16), rgba(24, 160, 166, 0.12));
+        color: var(--sa-blue);
+        font-size: 1.1rem;
+    }
+    .kpi-value {
+        margin-top: 1rem;
+        font-size: 2rem;
+        line-height: 1;
+        color: var(--sa-title);
+        font-weight: 800;
+        letter-spacing: -.03em;
+    }
+    .kpi-subtext {
+        margin-top: .45rem;
+        color: var(--sa-text-soft);
+        font-size: .9rem;
+    }
+    .kpi-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .6rem;
+        margin-top: 1rem;
+    }
+    .trend-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        border-radius: 999px;
+        padding: .35rem .65rem;
+        font-size: .8rem;
+        font-weight: 700;
+        background: rgba(71, 201, 133, 0.12);
+        color: var(--sa-green);
+    }
+    .trend-pill.warning {
+        background: rgba(241, 138, 79, 0.14);
+        color: var(--sa-orange);
+    }
+    .trend-pill.danger {
+        background: rgba(195, 73, 73, 0.12);
+        color: var(--sa-red);
+    }
+    .mini-progress {
+        width: 86px;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(47, 128, 237, 0.10);
+        overflow: hidden;
+    }
+    .mini-progress > span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--sa-blue), var(--sa-teal));
+    }
+    .section-card,
+    .chart-card,
+    .action-card {
+        padding: 1.25rem;
+    }
+    .main-column > section,
+    .main-column > header {
+        animation: revealUp .55s ease both;
+    }
+    .main-column > section:nth-child(2) { animation-delay: .03s; }
+    .main-column > section:nth-child(3) { animation-delay: .06s; }
+    .main-column > section:nth-child(4) { animation-delay: .09s; }
+    .main-column > section:nth-child(5) { animation-delay: .12s; }
+    .main-column > section:nth-child(6) { animation-delay: .15s; }
+    .main-column > section:nth-child(7) { animation-delay: .18s; }
+    .main-column > section:nth-child(8) { animation-delay: .21s; }
+    .section-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+    .section-header h2 {
+        margin: .2rem 0 0;
+        color: var(--sa-title);
+        font-size: clamp(1.1rem, 1.8vw, 1.45rem);
+        font-weight: 800;
+        letter-spacing: -.03em;
+    }
+    .section-header p {
+        margin: .38rem 0 0;
+        color: var(--sa-text-soft);
+        max-width: 720px;
+    }
+    .section-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        padding: .42rem .7rem;
+        border-radius: 999px;
+        background: rgba(47, 128, 237, 0.10);
+        color: var(--sa-blue);
+        font-weight: 700;
+        font-size: .82rem;
+    }
+    .analytics-grid {
+        grid-template-columns: 1.35fr 1.05fr;
+        margin-bottom: 1rem;
+    }
+    .analytics-stack {
+        display: grid;
+        gap: 1rem;
+        grid-template-rows: repeat(3, minmax(0, 1fr));
+    }
+    .chart-card canvas {
+        width: 100% !important;
+        height: 320px !important;
+    }
+    .chart-card.compact canvas {
+        height: 250px !important;
+    }
+    .chart-meta {
+        display: flex;
+        gap: .8rem;
+        flex-wrap: wrap;
+        margin-top: .75rem;
+        color: var(--sa-text-soft);
+        font-size: .86rem;
+    }
+    .operations-grid {
+        grid-template-columns: 1.05fr .95fr;
+        margin-bottom: 1rem;
+    }
+    .stack-grid {
+        display: grid;
+        gap: 1rem;
+    }
+    .panel-shell {
+        border: 1px solid var(--sa-border);
+        border-radius: 18px;
+        overflow: hidden;
+        background: var(--sa-surface-strong);
+    }
+    .panel-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.05rem;
+        border-top: 1px solid var(--sa-border);
+    }
+    .panel-row:first-child {
+        border-top: 0;
+    }
+    .panel-title {
+        color: var(--sa-title);
+        font-weight: 700;
+        margin-bottom: .2rem;
+    }
+    .meta {
+        color: var(--sa-text-soft);
+        font-size: .92rem;
+        line-height: 1.55;
+    }
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .35rem;
+        min-height: 1.9rem;
+        padding: .3rem .75rem;
+        border-radius: 999px;
+        background: rgba(24, 160, 166, 0.10);
+        color: var(--sa-teal);
+        font-size: .78rem;
+        font-weight: 800;
+        white-space: nowrap;
+        text-transform: capitalize;
+    }
+    .status-pill.warning {
+        background: rgba(241, 138, 79, 0.14);
+        color: var(--sa-orange);
+    }
+    .status-pill.danger {
+        background: rgba(195, 73, 73, 0.14);
+        color: var(--sa-red);
+    }
+    .status-pill.success {
+        background: rgba(71, 201, 133, 0.14);
+        color: var(--sa-green);
+    }
+    .activity-grid {
+        grid-template-columns: 1.1fr .9fr;
+        margin-bottom: 1rem;
+    }
+    .table-shell {
+        border: 1px solid var(--sa-border);
+        border-radius: 20px;
+        overflow: hidden;
+        background: var(--sa-surface-strong);
+    }
+    .table-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1rem .8rem;
+        border-bottom: 1px solid var(--sa-border);
+        flex-wrap: wrap;
+    }
+    .table-filter-pills {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: wrap;
+    }
+    .table-filter-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        min-height: 2.2rem;
+        padding: 0 .8rem;
+        border-radius: 999px;
+        border: 1px solid var(--sa-border);
+        background: var(--sa-surface-soft);
+        color: var(--sa-text);
+        font-size: .84rem;
+        font-weight: 700;
+    }
+    .table-filter-pill.active {
+        background: linear-gradient(135deg, rgba(47, 128, 237, 0.14), rgba(24, 160, 166, 0.12));
+        color: var(--sa-title);
+        border-color: rgba(47, 128, 237, 0.14);
+    }
+    .table-search {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        min-width: min(100%, 260px);
+        padding: .72rem .85rem;
+        border-radius: 14px;
+        background: var(--sa-surface-soft);
+        border: 1px solid var(--sa-border);
+        color: var(--sa-text-soft);
+    }
+    .table-search input {
+        width: 100%;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--sa-text);
+    }
+    .premium-table {
+        margin: 0;
+    }
+    .premium-table th,
+    .premium-table td {
+        padding: .95rem 1rem;
+        border-color: var(--sa-border);
+        vertical-align: top;
+    }
+    .premium-table th {
+        color: var(--sa-text-soft);
+        font-size: .76rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        font-weight: 800;
+        background: rgba(47, 128, 237, 0.03);
+    }
+    .premium-table tbody tr {
+        transition: background .16s ease;
+    }
+    .premium-table tbody tr:hover {
+        background: rgba(47, 128, 237, 0.05);
+    }
+    .table-cell-title {
+        color: var(--sa-title);
+        font-weight: 700;
+    }
+    .table-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .9rem 1rem 1rem;
+        border-top: 1px solid var(--sa-border);
+        color: var(--sa-text-soft);
+        font-size: .88rem;
+        flex-wrap: wrap;
+    }
+    .pagination-pills {
+        display: flex;
+        gap: .45rem;
+    }
+    .pagination-pills span {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--sa-border);
+        background: var(--sa-surface-soft);
+    }
+    .pagination-pills span.active {
+        background: linear-gradient(135deg, var(--sa-blue), var(--sa-teal));
+        color: #fff;
+        border-color: transparent;
+    }
+    .timeline {
+        display: grid;
+        gap: .9rem;
+    }
+    .timeline-item {
+        display: grid;
+        grid-template-columns: 16px minmax(0, 1fr);
+        gap: .85rem;
+    }
+    .timeline-dot {
+        width: 12px;
+        height: 12px;
+        margin-top: .42rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--sa-blue), var(--sa-teal));
+        box-shadow: 0 0 0 6px rgba(47, 128, 237, 0.10);
+    }
+    .timeline-body {
+        position: relative;
+        padding-bottom: .95rem;
+    }
+    .timeline-item:not(:last-child) .timeline-body::after {
+        content: "";
+        position: absolute;
+        left: -1.12rem;
+        top: 1.12rem;
+        width: 2px;
+        height: calc(100% - .1rem);
+        background: linear-gradient(180deg, rgba(47, 128, 237, 0.24), transparent);
+    }
+    .timeline-title {
+        color: var(--sa-title);
+        font-weight: 700;
+    }
+    .section-feedback {
+        border-radius: 18px;
+        padding: .95rem 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        font-weight: 700;
+    }
+    .section-feedback.success {
+        background: rgba(71, 201, 133, 0.12);
+        border-color: rgba(71, 201, 133, 0.18);
+        color: var(--sa-green);
+    }
+    .section-feedback.danger {
+        background: rgba(195, 73, 73, 0.10);
+        border-color: rgba(195, 73, 73, 0.18);
+        color: var(--sa-red);
+    }
+    .approval-grid,
+    .watchlist-grid,
+    .status-grid,
+    .quick-actions-grid,
+    .staff-grid {
+        display: grid;
+        gap: 1rem;
+    }
+    .approval-grid,
+    .watchlist-grid,
+    .status-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .approval-card,
+    .watch-card,
+    .status-card,
+    .action-card,
+    .staff-card {
+        padding: 1rem;
+        border-radius: 20px;
+        border: 1px solid var(--sa-border);
+        background: var(--sa-surface-strong);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    }
+    .approval-card-header,
+    .watch-card-header,
+    .status-card-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+        margin-bottom: .9rem;
+    }
+    .inline-note {
+        min-height: 88px;
+        width: 100%;
+        border-radius: 16px;
+        border: 1px solid var(--sa-border);
+        background: var(--sa-surface-soft);
+        color: var(--sa-text);
+        padding: .8rem .9rem;
+    }
+    .inline-note::placeholder {
+        color: var(--sa-text-soft);
+    }
+    .inline-help {
+        margin-top: .45rem;
+        color: var(--sa-text-soft);
+        font-size: .84rem;
+    }
+    .inline-actions {
+        display: flex;
+        gap: .55rem;
+        flex-wrap: wrap;
+        margin-top: .75rem;
+    }
+    .quick-actions-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .action-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        text-decoration: none;
+        color: inherit;
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .action-card-icon {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(47, 128, 237, 0.16), rgba(24, 160, 166, 0.14));
+        color: var(--sa-blue);
+        font-size: 1.15rem;
+    }
+    .status-grid {
+        margin-bottom: 1rem;
+    }
+    .status-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .8rem;
+        margin-top: .8rem;
+    }
+    .status-line:first-child {
+        margin-top: 0;
+    }
+    .status-name {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+        color: var(--sa-title);
+        font-weight: 700;
+    }
+    .status-name .dot {
+        width: .72rem;
+        height: .72rem;
+        border-radius: 50%;
+        background: var(--sa-green);
+        box-shadow: 0 0 0 5px rgba(71, 201, 133, 0.16);
+    }
+    .staff-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .staff-card-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: .85rem;
+    }
+    .staff-bars {
+        display: grid;
+        gap: .72rem;
+        margin-top: .9rem;
+    }
+    .bar-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: .35rem;
+        color: var(--sa-text-soft);
+        font-size: .86rem;
+    }
+    .track {
+        height: .5rem;
+        border-radius: 999px;
+        background: rgba(47, 128, 237, 0.10);
+        overflow: hidden;
+    }
+    .track > span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--sa-blue), var(--sa-teal));
+    }
+    .empty-state {
+        border: 1px dashed var(--sa-border-strong);
+        border-radius: 18px;
+        padding: 1.1rem;
+        text-align: center;
+        color: var(--sa-text-soft);
+        background: rgba(47, 128, 237, 0.04);
+    }
+    .offcanvas-menu {
+        background: var(--sa-surface-strong);
+        color: var(--sa-text);
+    }
+    .offcanvas-menu .offcanvas-header {
+        border-bottom: 1px solid var(--sa-border);
+    }
+    @keyframes revealUp {
+        from {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    @media (max-width: 1399px) {
+        .kpi-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .staff-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    @media (max-width: 1199px) {
+        .shell-grid {
+            grid-template-columns: 1fr;
+        }
+        .dashboard-sidebar {
+            display: none;
+            width: auto;
+        }
+        .hero-grid,
+        .analytics-grid,
+        .operations-grid,
+        .activity-grid {
+            grid-template-columns: 1fr;
+        }
+        .critical-strip,
+        .approval-grid,
+        .watchlist-grid,
+        .status-grid,
+        .quick-actions-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .focus-bar {
+            top: 5.35rem;
+        }
+    }
+    @media (max-width: 767px) {
+        .superadmin-shell {
+            padding-left: .65rem;
+            padding-right: .65rem;
+        }
+        .topbar {
+            top: .5rem;
+        }
+        .focus-bar {
+            top: 4.95rem;
+        }
+        .critical-strip,
+        .kpi-grid,
+        .approval-grid,
+        .watchlist-grid,
+        .status-grid,
+        .quick-actions-grid,
+        .staff-grid,
+        .hero-side-top {
+            grid-template-columns: 1fr;
+        }
+        .search-shell {
+            min-width: 100%;
+        }
+        .topbar-inner,
+        .topbar-left,
+        .topbar-right {
+            width: 100%;
+        }
+        .hero-panel,
+        .section-card,
+        .chart-card,
+        .action-card {
+            padding: 1rem;
+        }
+        .hero-copy h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{{ dashboard_chart_data|json_script:"superadmin-chart-data" }}
+<div class="superadmin-shell">
+    <div class="shell-grid">
+        <aside class="dashboard-sidebar surface rounded-xl">
+            <div class="sidebar-brand">
+                <div class="brand-badge">
+                    <span class="brand-mark"><i class="bi bi-shield-lock"></i></span>
+                    <span class="sidebar-copy">
+                        <div class="fw-bold">Super Admin</div>
+                        <small class="text-secondary-emphasis">Global control</small>
+                    </span>
+                </div>
+                <button class="icon-btn d-xl-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#superAdminMenu" aria-label="Open menu">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+
+            <div class="nav-kicker">Navigation</div>
+            <nav class="menu-list">
+                {% for item in super_admin_nav %}
+                    <a class="menu-link {% if item.active %}active{% endif %}" href="{{ item.url }}"><span class="menu-icon"><i class="bi bi-{{ item.icon }}"></i></span><span class="sidebar-label">{{ item.label }}</span></a>
+                {% endfor %}
+            </nav>
+
+            <div class="nav-kicker">System</div>
+            <div class="sidebar-note">
+                <div class="fw-bold text-dark-emphasis mb-1">System status layer</div>
+                <div class="d-flex flex-column gap-2">
+                    {% for check in health_checks|slice:":3" %}
+                        <div class="d-flex align-items-center justify-content-between gap-2">
+                            <span class="d-flex align-items-center gap-2"><span class="health-dot"></span>{{ check.label }}</span>
+                            <a href="{{ check.url }}" class="small text-decoration-none">Open</a>
+                        </div>
+                    {% endfor %}
+                </div>
+                <p>Platform monitoring, privileged actions, and operational recovery live here.</p>
+            </div>
+        </aside>
+
+        <main class="main-column">
+            <header class="topbar surface rounded-xl">
+                <div class="topbar-inner">
+                    <div class="topbar-left">
+                        <button class="icon-btn d-xl-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#superAdminMenu" aria-label="Open navigation">
+                            <i class="bi bi-layout-sidebar"></i>
+                        </button>
+                        <div class="topbar-title">
+                            <small>RakeshMed command center</small>
+                            <strong>Super Admin Dashboard</strong>
+                        </div>
+                        <div class="search-shell">
+                            <i class="bi bi-search"></i>
+                            <input type="search" placeholder="Search users, orders, alerts, medicines, logs">
+                        </div>
+                    </div>
+                    <div class="topbar-right">
+                        <a href="{% url 'super-admin-section' 'notifications' %}" class="icon-btn position-relative" aria-label="Notifications">
+                            <i class="bi bi-bell"></i>
+                            {% if nav_notifications_count %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ nav_notifications_count }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'super-admin-section' 'audit-logs' %}" class="icon-btn position-relative" aria-label="Messages">
+                            <i class="bi bi-chat-left-text"></i>
+                            {% if nav_messages_count %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">{{ nav_messages_count }}</span>
+                            {% endif %}
+                        </a>
+                        <button class="theme-btn" type="button" data-theme-toggle aria-label="Toggle theme">
+                            <i class="bi bi-moon-stars"></i>
+                        </button>
+                        <div class="dropdown">
+                            <a class="profile-pill dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="avatar-dot">{{ request.user.full_name|default:request.user.phone_number|slice:":1"|upper }}</span>
+                                <span>
+                                    {{ request.user.full_name|default:"Super Admin" }}
+                                    <small class="d-block fw-normal text-secondary">Primary operator</small>
+                                </span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end rounded-4 border-0 shadow-lg p-2">
+                                <li><a class="dropdown-item rounded-3" href="/api/v1/auth/me/">Profile API</a></li>
+                                <li><a class="dropdown-item rounded-3" href="/admin/">Django admin</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="post" action="{% url 'logout' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item rounded-3 text-danger">Logout</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <section id="overview" class="hero-panel">
+                <div class="hero-grid">
+                    <div class="hero-copy">
+                        <div class="eyebrow"><i class="bi bi-stars"></i> Premium healthcare operations</div>
+                        <h1>Platform control, clinical visibility, and operational calm in one surface.</h1>
+                        <p>
+                            Welcome back, {{ request.user.full_name|default:"Super Admin" }}. Your command layer is tuned for approvals, access,
+                            financial pressure, audit visibility, and platform health without the noise of a generic admin panel.
+                        </p>
+
+                        <div class="hero-insight">
+                            {% for item in ai_brief|slice:":3" %}
+                                <div class="hero-insight-item">
+                                    <i class="bi bi-activity"></i>
+                                    <div>{{ item }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="hero-actions">
+                            <select class="hero-range-select" aria-label="Date range">
+                                {% for option in date_range_options %}
+                                    <option value="{{ option.value }}"{% if option.value == selected_date_range %} selected{% endif %}>{{ option.label }}</option>
+                                {% endfor %}
+                            </select>
+                            <a class="hero-btn-primary" href="/admin/approval-queue/"><i class="bi bi-clipboard-check"></i>Open approval queue</a>
+                            <a class="hero-btn-secondary" href="/admin/reviewer-schedules/"><i class="bi bi-calendar3"></i>Reviewer schedules</a>
+                            <a class="hero-btn-secondary" href="/admin/live/"><i class="bi bi-broadcast"></i>Live operations feed</a>
+                        </div>
+                    </div>
+
+                    <div class="hero-side">
+                        <div class="hero-side-top">
+                            <div class="hero-stat">
+                                <div class="hero-stat-label">Total revenue</div>
+                                <div class="hero-stat-value">&#8377;{{ total_revenue }}</div>
+                                <div class="hero-stat-note">Gross value across all confirmed and in-flight commerce.</div>
+                            </div>
+                            <div class="hero-stat">
+                                <div class="hero-stat-label">Last refreshed</div>
+                                <div class="hero-stat-value">{{ dashboard_last_refreshed_at|date:"H:i" }}</div>
+                                <div class="hero-stat-note">{{ dashboard_last_refreshed_at|date:"d M Y" }}</div>
+                            </div>
+                        </div>
+
+                        <div class="hero-status-card">
+                            <div class="hero-stat-label mb-3">System performance summary</div>
+                            <div class="hero-status-grid">
+                                <div class="hero-status-row">
+                                    <div class="hero-status-name"><span class="health-dot"></span>API edge</div>
+                                    <div class="hero-status-value">Stable</div>
+                                </div>
+                                <div class="hero-status-row">
+                                    <div class="hero-status-name"><span class="health-dot"></span>Database</div>
+                                    <div class="hero-status-value">Nominal</div>
+                                </div>
+                                <div class="hero-status-row">
+                                    <div class="hero-status-name"><span class="health-dot"></span>Clinical queue</div>
+                                    <div class="hero-status-value">{{ prescription_snapshot.0.value }} pending</div>
+                                </div>
+                                <div class="hero-status-row">
+                                    <div class="hero-status-name"><span class="health-dot"></span>Reviewer network</div>
+                                    <div class="hero-status-value">{{ staff_coverage|length }} active</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="focus-bar surface rounded-xl" id="top">
+                <div class="focus-row">
+                    <div>
+                        <div class="card-kicker">Focus modes</div>
+                        <h2 class="h5 mb-1 mt-2">{{ dashboard_focus_config.label }}</h2>
+                        <p class="mb-0 text-secondary">{{ dashboard_focus_config.description }}</p>
+                    </div>
+                    <div class="tab-row">
+                        {% for tab in dashboard_focus_tabs %}
+                            <a class="focus-pill {% if tab.active %}active{% endif %}" href="{{ tab.href }}">
+                                {{ tab.label }}
+                                {% if tab.count is not None %}
+                                    <span class="count-badge">{{ tab.count }}</span>
+                                {% endif %}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="focus-row-bottom">
+                    <div class="chip-row">
+                        <a class="jump-chip" href="#overview" data-section-nav>Overview</a>
+                        <a class="jump-chip" href="#analytics" data-section-nav>Analytics</a>
+                        <a class="jump-chip" href="#approvals" data-section-nav>Approvals</a>
+                        <a class="jump-chip" href="#operations" data-section-nav>Operations</a>
+                        <a class="jump-chip" href="#staff" data-section-nav>Staff</a>
+                        <a class="jump-chip" href="#audit" data-section-nav>Audit</a>
+                        <a class="jump-chip" href="#top" data-section-nav>Back to top</a>
+                    </div>
+                    <div class="command-tools">
+                        <label class="d-inline-flex align-items-center gap-2">
+                            <span class="text-secondary small">Auto-refresh</span>
+                            <select class="refresh-select" data-auto-refresh-select>
+                                <option value="0">Off</option>
+                                <option value="30">30s</option>
+                                <option value="60">60s</option>
+                            </select>
+                        </label>
+                        <button type="button" class="tool-chip" data-auto-refresh-manual>
+                            <i class="bi bi-arrow-clockwise"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="meta-row mt-3">
+                    <span>Last refreshed {{ dashboard_last_refreshed_at|date:"d M Y, H:i:s" }}</span>
+                    <span class="command-status" data-auto-refresh-status>Auto-refresh off</span>
+                </div>
+            </section>
+
+            <section class="critical-strip">
+                {% for item in critical_now %}
+                    <a class="signal-card {{ item.tone }}" href="{{ item.href }}">
+                        <div class="signal-label">{{ item.label }}</div>
+                        <div class="signal-value">{{ item.value }}</div>
+                        <div class="signal-trend {{ item.trend.direction }}">
+                            {% if item.trend.direction == "up" %}
+                                <i class="bi bi-arrow-up-right"></i>
+                            {% elif item.trend.direction == "down" %}
+                                <i class="bi bi-arrow-down-right"></i>
+                            {% else %}
+                                <i class="bi bi-dash"></i>
+                            {% endif %}
+                            {{ item.trend.label }}
+                        </div>
+                    </a>
+                {% endfor %}
+            </section>
+
+            <section class="kpi-grid">
+                {% for metric in super_admin_kpis %}
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div>
+                                <div class="card-kicker">{{ metric.label }}</div>
+                                <div class="kpi-value" data-counter-target="{{ metric.value }}">{{ metric.display }}</div>
+                            </div>
+                            <span class="kpi-icon">
+                                <i class="bi bi-{{ metric.icon }}"></i>
+                            </span>
+                        </div>
+                        <div class="kpi-subtext">{{ metric.subtext }}</div>
+                        <div class="kpi-footer">
+                            <span class="trend-pill {% if metric.trend_tone == 'warning' %}warning{% elif metric.trend_tone == 'danger' %}danger{% endif %}">
+                                <i class="bi bi-arrow-up-right"></i>
+                                {{ metric.trend_label }}
+                            </span>
+                            <span class="mini-progress"><span style="width:{{ metric.progress }}%"></span></span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </section>
+
+            <section id="analytics" class="analytics-grid">
+                <div class="chart-card">
+                    <div class="section-header">
+                        <div>
+                            <div class="card-kicker">Revenue trend</div>
+                            <h2>Commercial performance over the last 7 days</h2>
+                            <p>Refined revenue visibility with order and prescription overlays for healthcare operations.</p>
+                        </div>
+                        <span class="section-tag"><i class="bi bi-graph-up"></i>Analytics</span>
+                    </div>
+                    <canvas id="revenueTrendChart"></canvas>
+                    <div class="chart-meta">
+                        <span><strong>{{ operations_snapshot.0.value }}</strong> pending Rx orders</span>
+                        <span><strong>{{ operations_snapshot.1.value }}</strong> unsettled payments</span>
+                        <span><strong>{{ financial_snapshot.2.value }}</strong> total refund cases</span>
+                    </div>
+                </div>
+
+                <div class="analytics-stack">
+                    <div class="chart-card compact">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Orders vs prescriptions</div>
+                                <h2>Clinical and commerce throughput</h2>
+                            </div>
+                        </div>
+                        <canvas id="volumeComparisonChart"></canvas>
+                    </div>
+                    <div class="chart-card compact">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Category mix</div>
+                                <h2>Medicine catalog distribution</h2>
+                            </div>
+                        </div>
+                        <canvas id="categoryDistributionChart"></canvas>
+                    </div>
+                    <div class="chart-card compact">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Patient growth</div>
+                                <h2>Customer registration momentum</h2>
+                            </div>
+                        </div>
+                        <canvas id="patientGrowthChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section class="operations-grid">
+                <div class="stack-grid">
+                    <section id="security" class="section-card">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Security posture</div>
+                                <h2>Authentication, alerts, and privileged risk</h2>
+                                <p>Surface the signals that matter before they turn into operational instability.</p>
+                            </div>
+                            <span class="section-tag"><i class="bi bi-shield-check"></i>Security</span>
+                        </div>
+                        <div class="status-grid">
+                            {% for item in security_snapshot %}
+                                <div class="status-card">
+                                    <div class="card-kicker">{{ item.label }}</div>
+                                    <div class="kpi-value fs-2 mt-2">{{ item.value }}</div>
+                                    <div class="meta mt-2">{{ item.hint }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section id="operations" class="section-card">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Smart operations</div>
+                                <h2>Inventory, pharmacy flow, and commercial signals</h2>
+                                <p>Daily pharmacy performance summary with inventory movement and low-stock pressure.</p>
+                            </div>
+                            <span class="section-tag"><i class="bi bi-capsule-pill"></i>Operations</span>
+                        </div>
+                        <div class="status-grid">
+                            {% for item in operations_snapshot %}
+                                <div class="status-card">
+                                    <div class="card-kicker">{{ item.label }}</div>
+                                    <div class="kpi-value fs-2 mt-2">{{ item.value }}</div>
+                                    <div class="meta mt-2">{{ item.hint }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="status-grid mt-4">
+                            <div class="status-card">
+                                <div class="card-kicker">Expiring medicines overview</div>
+                                {% if expiring_medicines %}
+                                    <div class="panel-shell mt-3">
+                                        {% for item in expiring_medicines %}
+                                            <div class="panel-row">
+                                                <div>
+                                                    <div class="panel-title">{{ item.name }}</div>
+                                                    <div class="meta">Expires {{ item.expiry_date|date:"d M Y" }}</div>
+                                                </div>
+                                                <span class="status-pill warning">Expiring</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="empty-state mt-3">
+                                        Batch-level expiry tracking has not been configured yet. This panel is ready for expiry-ledger data.
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="status-card">
+                                <div class="card-kicker">Daily pharmacy performance summary</div>
+                                <div class="panel-shell mt-3">
+                                    <div class="panel-row">
+                                        <div>
+                                            <div class="panel-title">Orders fulfilled today</div>
+                                            <div class="meta">Confirmed and moved through the pharmacy operation.</div>
+                                        </div>
+                                        <span class="status-pill success">{{ operations_snapshot.0.value }}</span>
+                                    </div>
+                                    <div class="panel-row">
+                                        <div>
+                                            <div class="panel-title">Clinical queue today</div>
+                                            <div class="meta">Prescriptions waiting on pharmacist review.</div>
+                                        </div>
+                                        <span class="status-pill warning">{{ prescription_snapshot.0.value }}</span>
+                                    </div>
+                                    <div class="panel-row">
+                                        <div>
+                                            <div class="panel-title">Payments under watch</div>
+                                            <div class="meta">Transactions that need settlement attention.</div>
+                                        </div>
+                                        <span class="status-pill">{{ financial_snapshot.0.value }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-shell mt-4">
+                            <div class="table-toolbar">
+                                <div>
+                                    <div class="fw-semibold text-dark-emphasis">Inventory movement summary</div>
+                                    <div class="meta">Latest stock actions across warehouses and pharmacy nodes.</div>
+                                </div>
+                                <div class="section-tag"><i class="bi bi-box-seam"></i>{{ recent_movements|length }} latest</div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table premium-table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Movement</th>
+                                            <th>Location</th>
+                                            <th>Delta</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for movement in recent_movements %}
+                                            <tr>
+                                                <td>
+                                                    <div class="table-cell-title">{{ movement.product.name }}</div>
+                                                    <div class="meta">{{ movement.reference|default:"No reference" }}</div>
+                                                </td>
+                                                <td>{{ movement.get_movement_type_display }}</td>
+                                                <td>{{ movement.location.name }}</td>
+                                                <td>
+                                                    <span class="status-pill {% if movement.quantity_delta < 0 %}warning{% else %}success{% endif %}">
+                                                        {{ movement.quantity_delta }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr><td colspan="4" class="text-center text-secondary">No inventory movements yet.</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="stack-grid">
+                    <section class="section-card">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Quick actions</div>
+                                <h2>Command shortcuts</h2>
+                            </div>
+                        </div>
+                        <div class="quick-actions-grid">
+                            <a class="action-card" href="/admin/">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="action-card-icon"><i class="bi bi-capsule-pill"></i></span>
+                                    <div>
+                                        <div class="fw-semibold text-dark-emphasis">Add Medicine</div>
+                                        <div class="meta">Catalog workflow</div>
+                                    </div>
+                                </div>
+                                <i class="bi bi-plus-lg"></i>
+                            </a>
+                            <a class="action-card" href="#clinical-feed">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="action-card-icon"><i class="bi bi-clipboard2-pulse"></i></span>
+                                    <div>
+                                        <div class="fw-semibold text-dark-emphasis">Add Doctor</div>
+                                        <div class="meta">Clinical directory</div>
+                                    </div>
+                                </div>
+                                <i class="bi bi-plus-lg"></i>
+                            </a>
+                            <a class="action-card" href="#latest-users">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="action-card-icon"><i class="bi bi-person-plus"></i></span>
+                                    <div>
+                                        <div class="fw-semibold text-dark-emphasis">Add Patient</div>
+                                        <div class="meta">Account onboarding</div>
+                                    </div>
+                                </div>
+                                <i class="bi bi-plus-lg"></i>
+                            </a>
+                            <a class="action-card" href="#orders-table">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="action-card-icon"><i class="bi bi-bag-plus"></i></span>
+                                    <div>
+                                        <div class="fw-semibold text-dark-emphasis">Create Order</div>
+                                        <div class="meta">Commerce control</div>
+                                    </div>
+                                </div>
+                                <i class="bi bi-plus-lg"></i>
+                            </a>
+                            <a class="action-card" href="/api/v1/health/metrics/">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="action-card-icon"><i class="bi bi-file-earmark-bar-graph"></i></span>
+                                    <div>
+                                        <div class="fw-semibold text-dark-emphasis">Generate Reports</div>
+                                        <div class="meta">Operational exports</div>
+                                    </div>
+                                </div>
+                                <i class="bi bi-arrow-up-right"></i>
+                            </a>
+                            <a class="action-card" href="#security">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="action-card-icon"><i class="bi bi-megaphone"></i></span>
+                                    <div>
+                                        <div class="fw-semibold text-dark-emphasis">Send Notification</div>
+                                        <div class="meta">System alert action</div>
+                                    </div>
+                                </div>
+                                <i class="bi bi-arrow-up-right"></i>
+                            </a>
+                        </div>
+                    </section>
+
+                    <section id="system-status" class="section-card">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">System status</div>
+                                <h2>Infrastructure and service readiness</h2>
+                            </div>
+                        </div>
+                        <div class="status-grid">
+                            <div class="status-card">
+                                <div class="status-line">
+                                    <div class="status-name"><span class="dot"></span>API status</div>
+                                    <span class="status-pill success">Healthy</span>
+                                </div>
+                                <div class="status-line">
+                                    <div class="status-name"><span class="dot"></span>Database status</div>
+                                    <span class="status-pill success">Connected</span>
+                                </div>
+                                <div class="status-line">
+                                    <div class="status-name"><span class="dot"></span>Backup status</div>
+                                    <span class="status-pill success">Recent</span>
+                                </div>
+                            </div>
+                            <div class="status-card">
+                                <div class="status-line">
+                                    <div class="status-name"><span class="dot"></span>Server load</div>
+                                    <span class="status-pill">Balanced</span>
+                                </div>
+                                <div class="status-line">
+                                    <div class="status-name"><span class="dot"></span>Active sessions</div>
+                                    <span class="status-pill">{{ metrics.0.value }}</span>
+                                </div>
+                                <div class="status-line">
+                                    <div class="status-name"><span class="dot"></span>Unread alerts</div>
+                                    <span class="status-pill warning">{{ nav_notifications_count }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section-card">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Critical notifications</div>
+                                <h2>Unread system alerts</h2>
+                            </div>
+                        </div>
+                        <div class="panel-shell">
+                            {% for notification in system_alerts %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="panel-title">{{ notification.title }}</div>
+                                        <div class="meta">{{ notification.body|truncatechars:110 }}</div>
+                                        <div class="meta mt-1">{{ notification.created_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill warning">{{ notification.kind|title }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="empty-state">No unread system or inventory alerts right now.</div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <section id="activity" class="activity-grid">
+                <div class="stack-grid">
+                    <section class="section-card" id="orders-table">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Recent orders</div>
+                                <h2>Premium order operations table</h2>
+                            </div>
+                            <span class="section-tag"><i class="bi bi-receipt"></i>{{ recent_orders|length }} latest</span>
+                        </div>
+                        <div class="table-shell">
+                            <div class="table-toolbar">
+                                <div class="table-search">
+                                    <i class="bi bi-search"></i>
+                                    <input type="search" placeholder="Search order stream">
+                                </div>
+                                <div class="table-filter-pills">
+                                    <span class="table-filter-pill active">All</span>
+                                    <span class="table-filter-pill">High value</span>
+                                    <span class="table-filter-pill">Prescription</span>
+                                    <span class="table-filter-pill">Cancelled</span>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table premium-table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Order</th>
+                                            <th>Customer</th>
+                                            <th>Status</th>
+                                            <th>Total</th>
+                                            <th>Payment</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for order in recent_orders %}
+                                            <tr>
+                                                <td>
+                                                    <div class="table-cell-title">{{ order.order_number }}</div>
+                                                    <div class="meta">{{ order.created_at|date:"d M Y, H:i" }}</div>
+                                                </td>
+                                                <td>
+                                                    <div class="table-cell-title">{{ order.user.full_name|default:order.user.phone_number }}</div>
+                                                    <div class="meta">{{ order.recipient }}</div>
+                                                </td>
+                                                <td><span class="status-pill {% if order.status == 'cancelled' %}danger{% elif order.status == 'pending_prescription_review' %}warning{% else %}success{% endif %}">{{ order.get_status_display }}</span></td>
+                                                <td>₹{{ order.total }}</td>
+                                                <td><span class="status-pill {% if order.payment_status == 'failed' %}danger{% elif order.payment_status == 'pending' or order.payment_status == 'cod_pending' %}warning{% else %}success{% endif %}">{{ order.get_payment_status_display }}</span></td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr><td colspan="5" class="text-center text-secondary">No recent orders yet.</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="table-pagination">
+                                <span>Showing the most recent operational orders</span>
+                                <div class="pagination-pills">
+                                    <span class="active">1</span><span>2</span><span>3</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section-card" id="clinical-feed">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Prescriptions</div>
+                                <h2>New clinical intake</h2>
+                            </div>
+                        </div>
+                        <div class="panel-shell">
+                            {% for prescription in recent_prescriptions %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="panel-title">{{ prescription.reference_code }} - {{ prescription.patient_name }}</div>
+                                        <div class="meta">{{ prescription.user.full_name|default:prescription.user.phone_number }} - {{ prescription.created_at|date:"d M Y, H:i" }}</div>
+                                        <div class="meta">Doctor: {{ prescription.doctor_name|default:"Not provided" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if prescription.status == 'rejected' %}danger{% elif prescription.status == 'clarification_required' or prescription.status == 'pending_review' %}warning{% else %}success{% endif %}">
+                                        {{ prescription.get_status_display }}
+                                    </span>
+                                </div>
+                            {% empty %}
+                                <div class="empty-state">No recent prescriptions found.</div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+
+                <div class="stack-grid">
+                    <section class="section-card" id="latest-users">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Latest users</div>
+                                <h2>Newest platform registrations</h2>
+                            </div>
+                        </div>
+                        <div class="panel-shell">
+                            {% for user in latest_users %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="panel-title">{{ user.full_name|default:user.phone_number }}</div>
+                                        <div class="meta">{{ user.email|default:user.phone_number }}</div>
+                                        <div class="meta">{{ user.created_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if user.role == 'super_admin' or user.role == 'admin' %}warning{% else %}{% endif %}">{{ user.get_role_display }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="empty-state">No recent user registrations yet.</div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section class="section-card">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Admin activity feed</div>
+                                <h2>Timeline-based control log</h2>
+                            </div>
+                        </div>
+                        <div class="timeline">
+                            {% for event in recent_control_actions %}
+                                <div class="timeline-item">
+                                    <span class="timeline-dot"></span>
+                                    <div class="timeline-body">
+                                        <div class="timeline-title">{{ event.message }}</div>
+                                        <div class="meta">{{ event.actor_label|default:"System" }} - {{ event.created_at|date:"d M Y, H:i" }}</div>
+                                        {% if event.meta.dashboard_note %}
+                                            <div class="meta mt-1">Reason: {{ event.meta.dashboard_note }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="empty-state">No recent super admin control actions yet.</div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <section id="approvals" class="section-card mb-4">
+                <div class="section-header">
+                    <div>
+                        <div class="card-kicker">Approvals</div>
+                        <h2>Partner onboarding queue</h2>
+                        <p>Approve, reject, or intervene in pharmacist and vendor onboarding with audit-friendly notes.</p>
+                    </div>
+                    <span class="section-tag"><i class="bi bi-hourglass-split"></i>{{ approval_snapshot.0.value }} pending</span>
+                </div>
+                {% if dashboard_feedback and dashboard_feedback.scope == "approvals" %}
+                    <div class="section-feedback {{ dashboard_feedback.level }}">{{ dashboard_feedback.message }}</div>
+                {% endif %}
+                <div class="approval-grid">
+                    {% for user in pending_approvals %}
+                        <article class="approval-card">
+                            <div class="approval-card-header">
+                                <div>
+                                    <div class="panel-title">{{ user.full_name|default:user.phone_number }}</div>
+                                    <div class="meta">{{ user.email|default:user.phone_number }} - {{ user.get_role_display }}</div>
+                                    <div class="meta">Assigned to: {{ user.approval_assigned_to.full_name|default:user.approval_assigned_to.phone_number|default:"Unassigned" }}</div>
+                                </div>
+                                <span class="status-pill {% if user.dashboard_is_overdue %}danger{% else %}warning{% endif %}">
+                                    {{ user.approval_status }}
+                                </span>
+                            </div>
+                            <div class="meta">
+                                Submitted {{ user.created_at|date:"d M Y, H:i" }}{% if user.approval_due_at %} - Due {{ user.approval_due_at|date:"d M Y, H:i" }}{% endif %}
+                            </div>
+                            <form method="post" class="mt-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="target_user_id" value="{{ user.pk }}">
+                                <textarea name="dashboard_note" class="inline-note" placeholder="Approval note or rejection reason. Required for rejection."></textarea>
+                                <div class="inline-help">Notes are saved with the approval record and audit timeline.</div>
+                                <div class="inline-actions">
+                                    <button type="submit" name="dashboard_action" value="approve_partner" class="btn btn-success rounded-pill px-3" data-confirm-message="Approve this partner account now?">Approve</button>
+                                    <button type="submit" name="dashboard_action" value="reject_partner" class="btn btn-outline-danger rounded-pill px-3" data-confirm-message="Reject this partner application? A reviewer note is required.">Reject</button>
+                                    <a href="/admin/approval-queue/{{ user.pk }}/" class="btn btn-outline-secondary rounded-pill px-3">Open detail</a>
+                                </div>
+                            </form>
+                        </article>
+                    {% empty %}
+                        <div class="empty-state">No pending partner approvals right now.</div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section id="staff" class="section-card mb-4">
+                <div class="section-header">
+                    <div>
+                        <div class="card-kicker">Staff coverage</div>
+                        <h2>Reviewer capacity and specialty balance</h2>
+                        <p>See who is available, overloaded, or drifting into overdue territory.</p>
+                    </div>
+                    <span class="section-tag"><i class="bi bi-people"></i>{{ staff_coverage|length }} reviewer profiles</span>
+                </div>
+                <div class="staff-grid">
+                    {% for reviewer in staff_coverage %}
+                        <article class="staff-card">
+                            <div class="staff-card-top">
+                                <div>
+                                    <div class="panel-title">{{ reviewer.full_name|default:reviewer.phone_number }}</div>
+                                    <div class="meta">{{ reviewer.get_role_display }} - {{ reviewer.get_approval_specialty_display }}</div>
+                                </div>
+                                <span class="status-pill {% if reviewer.reviewer_status_label != 'Available' %}warning{% else %}success{% endif %}">{{ reviewer.reviewer_status_label }}</span>
+                            </div>
+                            <div class="staff-bars">
+                                <div>
+                                    <div class="bar-label"><span>Pending assigned</span><strong>{{ reviewer.pending_assigned_total }}</strong></div>
+                                    <div class="track"><span style="width:{% widthratio reviewer.pending_assigned_total 12 100 %}%"></span></div>
+                                </div>
+                                <div>
+                                    <div class="bar-label"><span>Overdue assigned</span><strong>{{ reviewer.overdue_assigned_total }}</strong></div>
+                                    <div class="track"><span style="width:{% widthratio reviewer.overdue_assigned_total 8 100 %}%"></span></div>
+                                </div>
+                                <div>
+                                    <div class="bar-label"><span>Total owned</span><strong>{{ reviewer.assigned_total }}</strong></div>
+                                    <div class="track"><span style="width:{% widthratio reviewer.assigned_total 20 100 %}%"></span></div>
+                                </div>
+                            </div>
+                        </article>
+                    {% empty %}
+                        <div class="empty-state">No active reviewer staff found.</div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section id="access-watchlist" class="section-card mb-4">
+                <div class="section-header">
+                    <div>
+                        <div class="card-kicker">Access watchlist</div>
+                        <h2>Blocked and suspended account control</h2>
+                        <p>Reactivate, block, or suspend with deliberate notes and audit-safe controls.</p>
+                    </div>
+                    <span class="section-tag"><i class="bi bi-person-lock"></i>{{ access_watchlist|length }} surfaced</span>
+                </div>
+                {% if dashboard_feedback and dashboard_feedback.scope == "access" %}
+                    <div class="section-feedback {{ dashboard_feedback.level }}">{{ dashboard_feedback.message }}</div>
+                {% endif %}
+                <div class="watchlist-grid">
+                    {% for user in access_watchlist %}
+                        <article class="watch-card">
+                            <div class="watch-card-header">
+                                <div>
+                                    <div class="panel-title">{{ user.full_name|default:user.phone_number }}</div>
+                                    <div class="meta">{{ user.get_role_display }} - {{ user.email|default:user.phone_number }}</div>
+                                    <div class="meta">Updated {{ user.updated_at|date:"d M Y, H:i" }}</div>
+                                </div>
+                                <span class="status-pill {% if user.account_status == 'suspended' %}warning{% else %}danger{% endif %}">{{ user.account_status }}</span>
+                            </div>
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="target_user_id" value="{{ user.pk }}">
+                                <textarea name="dashboard_note" class="inline-note" placeholder="Reason for access change. Required for block or suspend."></textarea>
+                                <div class="inline-help">The note is stored in the audit event for this privileged account action.</div>
+                                <div class="inline-actions">
+                                    <button type="submit" name="dashboard_action" value="set_active" class="btn btn-success rounded-pill px-3" data-confirm-message="Reactivate this account and restore access?">Reactivate</button>
+                                    {% if user.account_status != "blocked" %}
+                                        <button type="submit" name="dashboard_action" value="set_blocked" class="btn btn-outline-danger rounded-pill px-3" data-confirm-message="Block this account immediately? The provided reason will be stored in the audit log.">Block</button>
+                                    {% endif %}
+                                    {% if user.account_status != "suspended" %}
+                                        <button type="submit" name="dashboard_action" value="set_suspended" class="btn btn-outline-warning rounded-pill px-3" data-confirm-message="Suspend this account? The provided reason will be stored in the audit log.">Suspend</button>
+                                    {% endif %}
+                                </div>
+                            </form>
+                        </article>
+                    {% empty %}
+                        <div class="empty-state">No blocked or suspended accounts right now.</div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="status-grid mb-4">
+                <section class="section-card" id="inventory-risk">
+                    <div class="section-header">
+                        <div>
+                            <div class="card-kicker">Inventory risks</div>
+                            <h2>Low-stock and expiring pressure</h2>
+                        </div>
+                    </div>
+                    <div class="panel-shell">
+                        {% for item in top_inventory_risks %}
+                            <div class="panel-row">
+                                <div>
+                                    <div class="panel-title">{{ item.product.name }}</div>
+                                    <div class="meta">{{ item.product.sku }} - {{ item.location.name }}</div>
+                                </div>
+                                <span class="status-pill {% if item.quantity_on_hand <= 0 %}danger{% elif item.quantity_on_hand <= 10 %}warning{% else %}success{% endif %}">
+                                    {{ item.quantity_on_hand }} on hand
+                                </span>
+                            </div>
+                        {% empty %}
+                            <div class="empty-state">No inventory rows available.</div>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <section class="section-card">
+                    <div class="section-header">
+                        <div>
+                            <div class="card-kicker">Platform controls</div>
+                            <h2>High-value admin shortcuts</h2>
+                        </div>
+                    </div>
+                    <div class="stack-grid">
+                        {% for control in platform_controls %}
+                            <a class="action-card" href="{{ control.url }}">
+                                <div>
+                                    <div class="panel-title">{{ control.label }}</div>
+                                    <div class="meta">{{ control.text }}</div>
+                                </div>
+                                <i class="bi bi-arrow-up-right"></i>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </section>
+            </section>
+
+            <section id="audit" class="section-card">
+                <div class="section-header">
+                    <div>
+                        <div class="card-kicker">Audit timeline</div>
+                        <h2>Recent privileged and operational events</h2>
+                        <p>A calmer, easier-to-scan history of platform actions and high-value audit messages.</p>
+                    </div>
+                    <span class="section-tag"><i class="bi bi-journal-text"></i>{{ recent_audit|length }} latest</span>
+                </div>
+                <div class="timeline">
+                    {% for event in recent_audit %}
+                        <div class="timeline-item">
+                            <span class="timeline-dot"></span>
+                            <div class="timeline-body">
+                                <div class="timeline-title">{{ event.message }}</div>
+                                <div class="meta">{{ event.event_type }} - {{ event.created_at|date:"d M Y, H:i" }}</div>
+                                {% if event.actor_label %}
+                                    <div class="meta">Actor: {{ event.actor_label }}</div>
+                                {% endif %}
+                                <div class="mt-2">
+                                    <span class="status-pill {% if event.severity == 'critical' %}danger{% elif event.severity == 'warning' %}warning{% else %}success{% endif %}">{{ event.severity }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="empty-state">No audit events recorded yet.</div>
+                    {% endfor %}
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-start offcanvas-menu" tabindex="-1" id="superAdminMenu" aria-labelledby="superAdminMenuLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="superAdminMenuLabel">Super Admin Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <nav class="menu-list">
+            {% for item in super_admin_nav %}
+                <a class="menu-link {% if item.active %}active{% endif %}" href="{{ item.url }}" data-bs-dismiss="offcanvas"><span class="menu-icon"><i class="bi bi-{{ item.icon }}"></i></span>{{ item.label }}</a>
+            {% endfor %}
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="{% static 'portal/action-confirm.js' %}"></script>
+<script src="{% static 'portal/section-nav.js' %}"></script>
+<script src="{% static 'portal/auto-refresh.js' %}"></script>
+<script src="{% static 'portal/superadmin-dashboard.js' %}"></script>
+{% endblock %}

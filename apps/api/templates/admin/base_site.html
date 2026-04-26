@@ -1,0 +1,91 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/theme.css' %}">
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script defer src="{% static 'admin/theme.js' %}"></script>
+{% endblock %}
+
+{% block branding %}
+<div class="admin-topbar">
+  <div class="brand-shell">
+    <div class="brand-mark">TC</div>
+    <div class="brand-copy">
+      <h1 id="site-name"><a href="{% url 'admin:index' %}">TrueCare Backoffice</a></h1>
+      <p class="brand-tagline">Catalog, prescriptions, orders, users, and operations in one place.</p>
+    </div>
+  </div>
+  <div class="admin-topbar-tools">
+    <div class="admin-tool-panel">
+      <form class="admin-topbar-search" action="" method="get">
+        <span class="admin-topbar-search-icon">&#8981;</span>
+        <input type="search" name="q" placeholder="Search records, modules, orders, prescriptions..." aria-label="Search admin">
+      </form>
+      <div class="admin-topbar-controls">
+        <div class="admin-control-group admin-control-group--themes">
+          <button class="admin-control-chip" type="button" data-theme-style="cyan">Cyan</button>
+          <button class="admin-control-chip" type="button" data-theme-style="pink">Pink</button>
+          <button class="admin-control-chip" type="button" data-theme-style="purple">Purple</button>
+          <button class="admin-control-chip" type="button" data-theme-style="tron">Tron</button>
+          <button class="admin-control-chip" type="button" data-theme-style="matrix">Matrix</button>
+          <button class="admin-control-chip" type="button" data-theme-style="cyberpunk">Cyberpunk</button>
+        </div>
+        <div class="admin-control-group admin-control-group--utility">
+          <button class="admin-control-chip" type="button" data-contrast-toggle>Contrast</button>
+          <label class="admin-glow-control">
+            <span>Glow</span>
+            <input type="range" min="80" max="180" value="100" data-glow-intensity aria-label="Glow intensity">
+          </label>
+          <button class="admin-command-trigger" type="button" data-command-open>
+            <span>Command</span>
+            <strong>Ctrl + K</strong>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="admin-account-panel">
+      {% if request.user.is_authenticated %}
+      <div class="admin-user-pill">
+        <div class="admin-user-avatar">{{ request.user.get_username|slice:":2"|upper }}</div>
+        <div class="admin-user-copy">
+          <strong>{{ request.user.get_username }}</strong>
+          <span>Control node online</span>
+        </div>
+        <span class="admin-user-status"></span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block nav-global %}{{ block.super }}{% endblock %}
+
+{% block footer %}
+{{ block.super }}
+<div class="admin-command-palette" hidden data-command-palette>
+  <div class="admin-command-backdrop" data-command-close></div>
+  <div class="admin-command-dialog">
+    <div class="admin-command-header">
+      <span class="admin-command-icon">&#8981;</span>
+      <input type="search" placeholder="Jump to products, categories, orders, prescriptions..." data-command-input aria-label="Command palette search">
+      <button type="button" class="admin-command-close" data-command-close>&times;</button>
+    </div>
+    <div class="admin-command-list" data-command-list></div>
+  </div>
+</div>
+<div class="admin-toast-stack" data-toast-stack></div>
+<div class="admin-session-warning" hidden data-session-warning>
+  <div class="admin-session-warning__card">
+    <p class="admin-page-eyebrow">Session Monitor</p>
+    <h2>Session drifting idle</h2>
+    <p>Your control console has been inactive for a while. Press any key or move the pointer to stay active.</p>
+    <button type="button" class="button default" data-session-continue>Stay Active</button>
+  </div>
+</div>
+{% endblock %}
