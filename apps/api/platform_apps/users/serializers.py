@@ -34,6 +34,17 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    def validate_email(self, value):
+        email = (value or "").strip().lower()
+        if not email:
+            return email
+        qs = User.objects.filter(email__iexact=email)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return email
+
     class Meta:
         model = User
         fields = ("full_name", "email")
@@ -91,6 +102,18 @@ class VerifyOTPSerializer(serializers.Serializer):
     purpose = serializers.ChoiceField(choices=OTPRequest.PURPOSE_CHOICES, default="login")
     full_name = serializers.CharField(max_length=255, required=False, allow_blank=True)
     email = serializers.EmailField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        email = (attrs.get("email") or "").strip().lower()
+        phone_number = (attrs.get("phone_number") or "").strip()
+        if email:
+            if User.objects.filter(email__iexact=email).exclude(phone_number=phone_number).exists():
+                raise serializers.ValidationError({"email": "A user with this email already exists."})
+            attrs["email"] = email
+        attrs["phone_number"] = phone_number
+        attrs["full_name"] = (attrs.get("full_name") or "").strip()
+        return attrs
 
 
 class AdminUserManagementSerializer(serializers.ModelSerializer):

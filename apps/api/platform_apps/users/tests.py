@@ -804,6 +804,137 @@ class AuthSecurityTests(TestCase):
         self.assertEqual(user.created_by_id, user.id)
         self.assertEqual(user.updated_by_id, user.id)
 
+    def test_verify_otp_does_not_overwrite_existing_user_identity_fields(self) -> None:
+        user = User.objects.create_user(
+            phone_number="9000000014",
+            email="original@example.com",
+            full_name="Original Customer",
+            password="testpass123",
+            role="customer",
+            type_of_user="customer",
+            approval_status="approved",
+            account_status="active",
+            is_phone_verified=False,
+        )
+        OTPRequest.objects.create(
+            phone_number=user.phone_number,
+            purpose="login",
+            otp_code="123456",
+            expires_at=timezone.now() + timezone.timedelta(minutes=10),
+        )
+
+        response = self.client.post(
+            "/api/v1/auth/verify-otp/",
+            {
+                "phone_number": user.phone_number,
+                "otp_code": "123456",
+                "purpose": "login",
+                "full_name": "Injected Name",
+                "email": "attacker@example.com",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        user.refresh_from_db()
+        self.assertEqual(user.email, "original@example.com")
+        self.assertEqual(user.full_name, "Original Customer")
+        self.assertTrue(user.is_phone_verified)
+
+    def test_verify_otp_rejects_non_customer_accounts(self) -> None:
+        staff_user = User.objects.create_user(
+            phone_number="9000000015",
+            email="admin-otp@example.com",
+            password="testpass123",
+            role="admin",
+            approval_status="approved",
+            account_status="active",
+            is_staff=True,
+        )
+        OTPRequest.objects.create(
+            phone_number=staff_user.phone_number,
+            purpose="login",
+            otp_code="123456",
+            expires_at=timezone.now() + timezone.timedelta(minutes=10),
+        )
+
+        response = self.client.post(
+            "/api/v1/auth/verify-otp/",
+            {
+                "phone_number": staff_user.phone_number,
+                "otp_code": "123456",
+                "purpose": "login",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertIn("customer accounts", response.data["detail"])
+        self.assertFalse(Token.objects.filter(user=staff_user).exists())
+
+    def test_verify_otp_returns_validation_error_for_duplicate_email(self) -> None:
+        User.objects.create_user(
+            phone_number="9000000016",
+            email="existing-otp@example.com",
+            password="testpass123",
+            role="customer",
+            type_of_user="customer",
+            approval_status="approved",
+            account_status="active",
+        )
+        OTPRequest.objects.create(
+            phone_number="9000000017",
+            purpose="login",
+            otp_code="123456",
+            expires_at=timezone.now() + timezone.timedelta(minutes=10),
+        )
+
+        response = self.client.post(
+            "/api/v1/auth/verify-otp/",
+            {
+                "phone_number": "9000000017",
+                "otp_code": "123456",
+                "purpose": "login",
+                "email": "existing-otp@example.com",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("email", response.data)
+
+    def test_profile_update_returns_validation_error_for_duplicate_email(self) -> None:
+        User.objects.create_user(
+            phone_number="9000000020",
+            email="taken-profile@example.com",
+            password="testpass123",
+            role="customer",
+            type_of_user="customer",
+            approval_status="approved",
+            account_status="active",
+        )
+        user = User.objects.create_user(
+            phone_number="9000000021",
+            email="profile-owner@example.com",
+            password="testpass123",
+            role="customer",
+            type_of_user="customer",
+            approval_status="approved",
+            account_status="active",
+            is_phone_verified=True,
+        )
+        token = Token.objects.create(user=user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+
+        response = self.client.patch(
+            "/api/v1/auth/me/",
+            {"email": "taken-profile@example.com"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("email", response.data)
+
 
 class PortalAuthFlowTests(TestCase):
     def setUp(self) -> None:
