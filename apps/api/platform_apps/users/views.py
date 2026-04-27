@@ -430,6 +430,20 @@ PERMISSION_MATRIX_DEFAULTS = {
         "medicine_catalog.delete_medicine": PERMISSION_STATE_ALLOWED,
         "medicine_catalog.bulk_upload": PERMISSION_STATE_ALLOWED,
     },
+    "procurement_manager": {
+        "core_access.dashboard_access": PERMISSION_STATE_ALLOWED,
+        "core_access.profile_own": PERMISSION_STATE_ALLOWED,
+        "inventory_warehouse.view_stock": PERMISSION_STATE_ALLOWED,
+        "inventory_warehouse.receive_stock": PERMISSION_STATE_LIMITED,
+        "reports.view_reports": PERMISSION_STATE_LIMITED,
+    },
+    "marketing_manager": {
+        "core_access.dashboard_access": PERMISSION_STATE_ALLOWED,
+        "core_access.profile_own": PERMISSION_STATE_ALLOWED,
+        "medicine_catalog.view_medicines": PERMISSION_STATE_ALLOWED,
+        "orders.view_orders": PERMISSION_STATE_LIMITED,
+        "reports.view_reports": PERMISSION_STATE_ALLOWED,
+    },
     "operations_manager": {
         "core_access.dashboard_access": PERMISSION_STATE_ALLOWED,
         "core_access.profile_own": PERMISSION_STATE_ALLOWED,
@@ -496,6 +510,8 @@ PERMISSION_MATRIX_DEFAULTS = {
     "viewer": {
         "core_access.dashboard_access": PERMISSION_STATE_LIMITED,
         "core_access.profile_own": PERMISSION_STATE_LIMITED,
+        "orders.view_orders": PERMISSION_STATE_LIMITED,
+        "inventory_warehouse.view_stock": PERMISSION_STATE_LIMITED,
         "reports.view_reports": PERMISSION_STATE_LIMITED,
     },
     "security_admin": {
