@@ -96,7 +96,7 @@ RakeshMed/
 
 ## 5. Target Domain Modules
 
-Build the backend as domain-driven Django apps:
+The backend should continue to be organized as domain-driven Django apps:
 
 1. `users`
 2. `catalog`
@@ -343,26 +343,27 @@ This is non-negotiable for a pharmacy platform:
 
 ## 15. Recommended Build Order
 
-1. finalize auth and role model
-2. build `catalog`
-3. build `cart`
-4. build `prescriptions`
-5. build `orders`
-6. build `inventory`
-7. wire notifications and background jobs
-8. add OpenSearch and scale hardening
+1. finish auth/session hardening and role-policy cleanup
+2. replace remaining mock or mixed frontend data with live APIs
+3. wire notifications and background jobs end to end
+4. complete production security and compliance hardening
+5. add mobile QA, load testing, and operational alert coverage
+6. optimize search with PostgreSQL FTS now, then OpenSearch only when justified
+7. deepen analytics, support, promotions, and warehouse workflows
+8. revisit service extraction only after sustained scale pressure
 
 ## 16. Immediate Next Step
 
 The repository already has:
 
 - Next.js app in `apps/web`
-- Django API scaffold in `apps/api`
+- Django API platform in `apps/api`
 - Postgres/Redis/API compose file
 - health endpoints
+- production-backed verification via `npm.cmd run verify`
 
 The next real implementation step is:
 
-1. create Django apps for `users`, `catalog`, and `prescriptions`
-2. connect `apps/web` to real `/api/v1/...` endpoints
-3. replace mock catalog/cart/prescription data with database-backed APIs
+1. audit `apps/web` for any remaining mock or mixed data dependencies
+2. connect those routes fully to real `/api/v1/...` endpoints
+3. finish security, observability, and release-operability gaps called out in the readiness docs

@@ -7,17 +7,7 @@ This checklist is for turning the current repository into a real, launch-ready, 
 - [x] Frontend app scaffold exists in `apps/web`
 - [x] Backend API scaffold exists in `apps/api`
 - [x] Local `PostgreSQL + Redis + API` docker compose exists
-- [ ] Create real Django apps:
-  - [ ] `users`
-  - [ ] `catalog`
-  - [ ] `inventory`
-  - [ ] `prescriptions`
-  - [ ] `cart`
-  - [ ] `orders`
-  - [ ] `payments`
-  - [ ] `delivery`
-  - [ ] `notifications`
-  - [ ] `audit`
+- [x] Core Django platform apps now exist for users, catalog/admin surfaces, inventory, prescriptions, cart/orders/payments, delivery, notifications, audit, and health
 - [ ] Define clear ownership and boundaries between modules
 - [ ] Add API versioning and deprecation rules
 
@@ -209,22 +199,14 @@ Use OWASP ASVS as the baseline for verification.
 
 ## 13. Testing
 
-- [ ] Add backend unit tests
-- [ ] Add backend API integration tests
-- [ ] Add permission tests
+- [x] Add backend unit tests
+- [x] Add backend API integration tests
+- [x] Add permission tests
 - [ ] Add Celery task tests
 - [ ] Add frontend component tests
 - [ ] Add frontend integration tests
-- [ ] Add Playwright e2e tests for:
-  - [ ] login
-  - [ ] search
-  - [ ] product detail
-  - [ ] upload prescription
-  - [ ] cart
-  - [ ] checkout
-  - [ ] admin flows
-  - [ ] pharmacist flows
-- [ ] Add responsive visual QA checklist
+- [x] Add Playwright e2e tests for login, search, product detail, upload prescription, cart, checkout, admin flows, and pharmacist flows
+- [x] Add responsive visual QA checklist reference via `BROWSER_SMOKE_CHECKLIST.md`
 
 ## 14. Compliance and Pharmacy-Specific Controls
 
@@ -239,26 +221,24 @@ Use OWASP ASVS as the baseline for verification.
 
 ## 15. CI/CD and Release Safety
 
-- [ ] Add CI pipeline
+- [x] Add CI pipeline
 - [ ] Add lint checks
-- [ ] Add type checks
-- [ ] Add backend test stage
-- [ ] Add frontend test stage
-- [ ] Add build stage
-- [ ] Add migration safety checks
+- [x] Add type checks
+- [x] Add backend test stage
+- [x] Add frontend test stage
+- [x] Add build stage
+- [x] Add migration safety checks
 - [ ] Add security scan stage
 - [ ] Add staging deployment
 - [ ] Add rollback procedure
-- [ ] Add release checklist
+- [x] Add release checklist
 
 ## 16. Immediate Next Priority
 
-Build these next in order:
+Focus these next in order:
 
-1. `users`
-2. `catalog`
-3. `prescriptions`
-4. connect frontend to live APIs
-5. replace mock cart and order data
-6. add mobile QA pass
-7. add security baseline hardening
+1. finish replacing any remaining mock or mixed frontend data flows with live APIs
+2. complete production security baseline hardening
+3. validate production operations: preflight, metrics, alerts, backup, and restore
+4. add mobile and tablet QA across major customer and ops routes
+5. expand background-job, load, and frontend component/integration test coverage

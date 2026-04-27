@@ -1,6 +1,5 @@
 import { fetchCatalogProducts, type ApiCatalogProductSummary } from "@/lib/api";
 import { SearchExperience } from "@/components/search-experience";
-import { searchSuggestions, storefrontProducts } from "@/lib/storefront-data";
 
 const substituteTags = ["Same salt", "Best savings", "Prescription required", "In stock"];
 
@@ -36,13 +35,6 @@ function discountFromPrices(mrp: string, salePrice: string) {
   }
 
   return `${Math.round(((mrpValue - saleValue) / mrpValue) * 100)}% OFF`;
-}
-
-function fallbackSearchProducts() {
-  return storefrontProducts.map((product) => ({
-    ...product,
-    tags: product.tags.map((tag) => (tag === "Prescription only" ? "Prescription required" : tag))
-  }));
 }
 
 function buildLiveSearchProducts(products: ApiCatalogProductSummary[]): SearchPageProduct[] {
@@ -110,8 +102,8 @@ export default async function SearchPage({
 }) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const initialQuery = resolvedSearchParams?.q?.trim() ?? "";
-  let interactiveProducts: SearchPageProduct[] = initialQuery ? [] : fallbackSearchProducts();
-  let popularSearches: string[] = [...searchSuggestions];
+  let interactiveProducts: SearchPageProduct[] = [];
+  let popularSearches: string[] = [];
 
   try {
     const liveProducts = await fetchCatalogProducts(initialQuery ? { q: initialQuery } : {});
@@ -125,7 +117,7 @@ export default async function SearchPage({
       }
     }
   } catch {
-    interactiveProducts = initialQuery ? [] : fallbackSearchProducts();
+    interactiveProducts = [];
   }
 
   return (

@@ -123,8 +123,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     approval_specialty = models.CharField(max_length=16, choices=APPROVAL_SPECIALTY_CHOICES, default="all")
     approval_available_for_assignment = models.BooleanField(default=True)
     approval_unavailable_until = models.DateTimeField(blank=True, null=True)
-    approval_shift_start_hour = models.PositiveSmallIntegerField(default=9)
-    approval_shift_end_hour = models.PositiveSmallIntegerField(default=18)
+    approval_shift_start_hour = models.PositiveSmallIntegerField(default=0)
+    approval_shift_end_hour = models.PositiveSmallIntegerField(default=0)
     approval_shift_weekdays = models.CharField(max_length=32, default="0,1,2,3,4,5,6")
     approval_leave_dates = models.CharField(max_length=255, blank=True)
     approval_assigned_to = models.ForeignKey(

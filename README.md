@@ -90,17 +90,12 @@ Local PostgreSQL defaults to host port `5433` to avoid conflicts with existing m
 - `scripts/backup_postgres.ps1` and `scripts/restore_postgres.ps1` provide backup/restore helpers
 - `scripts/loadtest_api.py` provides a repeatable concurrent API load harness
 
-## Recommended next backend modules
+## Current next priorities
 
-Build these next as real Django apps:
+The repository is past the initial scaffold stage. The highest-value work left is:
 
-1. `users`
-2. `catalog`
-3. `inventory`
-4. `prescriptions`
-5. `cart`
-6. `orders`
-7. `payments`
-8. `delivery`
-9. `notifications`
-10. `audit`
+1. replace any remaining mock or mixed frontend data flows with live `/api/v1/...` integrations
+2. finish production security hardening such as rate limits, headers, cookie policy, and secret handling
+3. complete production operations gates including backup/restore rehearsal, metrics/alerts validation, and preflight
+4. expand automated coverage around background jobs, responsive UX, and remaining edge-case permissions
+5. keep release readiness centered on `npm.cmd run verify` plus the manual browser smoke checklist

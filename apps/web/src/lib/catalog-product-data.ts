@@ -1,6 +1,6 @@
 import { fetchCatalogProductBySlug, type ApiCatalogProductDetail, type ApiCatalogProductSummary } from "@/lib/api";
 import { toProductSlug, type ResolvedCategoryPage } from "@/lib/category-page-data";
-import { storefrontProducts, type StorefrontProduct } from "@/lib/storefront-data";
+import type { StorefrontProduct } from "@/lib/storefront-data";
 
 export type CatalogProductDetail = {
   slug: string;
@@ -843,153 +843,35 @@ function buildDetailFromCollectionPage(
   return detail;
 }
 
-function seedStorefrontProducts() {
-  for (const product of storefrontProducts) {
-    if (productDetailCache.has(product.slug)) {
-      continue;
-    }
-
-    const manufacturer = manufacturerForBrand(product.brand);
-    const relatedPool = storefrontProducts.filter((entry) => entry.slug !== product.slug);
-
-    productDetailCache.set(product.slug, {
-      slug: product.slug,
-      name: product.name,
-      brand: product.brand,
-      manufacturer,
-      off: product.off,
-      mrp: product.mrp,
-      price: product.price,
-      pack: product.pack,
-      form: product.form,
-      pricePerUnit: `${product.price}/${product.form.toUpperCase()}`,
-      accent: "#eff8ff",
-      breadcrumbs: [
-        { label: "Home", href: "/" },
-        { label: "Medicines", href: "/categories" },
-        { label: titleFromSlug(product.category), href: "/categories" },
-        { label: product.name }
-      ],
-      composition: `${product.salt} (0 Mg)`,
-      deliveryLabel: "Tomorrow 10 PM",
-      quickLinks: [
-        { id: "uses", label: "Uses" },
-        { id: "how-it-works", label: "How it works" },
-        { id: "how-to-use", label: "Directions for use" },
-        { id: "side-effects", label: "Side effects" },
-        { id: "warning-precautions", label: "Warning & precautions" },
-        { id: "interactions", label: "Interactions" },
-        { id: "synopsis", label: "Synopsis" },
-        { id: "useful-tests", label: "Useful diagnostic tests" },
-        { id: "faq", label: "FAQs" },
-        { id: "learn-more", label: "Learn more" }
-      ],
-      galleryItems: buildGalleryItems(product.name, product.brand, product.pack),
-      coupons: buildCoupons(product.price),
-      assuranceItems: [...buildAssuranceItems()],
-      membership: buildMembership(),
-      highlights: product.uses,
-      productHighlights: product.uses,
-      description: [
-        `${product.name} is a medicine-style product detail page with richer information, pricing, and supporting sections for easier comparison.`,
-        `${product.name} from ${product.brand} is shown with pack size, composition, and related alternatives to match the Truemeds reference layout.`
-      ],
-      ingredients: [`Active ingredient: ${product.salt}`, `${product.brand} branded formulation`, "Supportive inactive ingredients vary by pack."],
-      keyUses: product.uses,
-      howToUse: [
-        "Use as directed on the label or by your doctor.",
-        "Follow the recommended timing and dosage instructions.",
-        "Do not exceed the recommended amount unless advised."
-      ],
-      safetyInformation: [
-        "Read the label carefully before use.",
-        product.rx ? "Use only under medical supervision." : "Use responsibly according to package instructions.",
-        "Store in a cool and dry place away from direct sunlight."
-      ],
-      additionalInformation: [
-        {
-          label: "Good to Know",
-          bullets: [`Pack: ${product.pack}`, `Brand: ${product.brand}`, `Use for: ${product.useFor}`]
-        }
-      ],
-      faqs: [
-        {
-          question: `What is ${product.name} used for?`,
-          answer: `${product.name} is commonly chosen for ${product.useFor.toLowerCase()} support and is shown with related options for easier comparison.`
-        },
-        {
-          question: "Can I compare substitutes or related products?",
-          answer: "Yes. The page includes related product rails to help compare nearby alternatives."
-        }
-      ],
-      warningCards: buildWarningCards(
-        [
-          "Read the label carefully before use.",
-          product.rx ? "Use only under medical supervision." : "Use responsibly according to package instructions.",
-          "Store in a cool and dry place away from direct sunlight."
-        ],
-        product.name
-      ),
-      interactions: buildInteractions([
-        {
-          label: "Good to Know",
-          bullets: [`Pack: ${product.pack}`, `Brand: ${product.brand}`, `Use for: ${product.useFor}`]
-        }
-      ]),
-      usefulTests: buildUsefulTests(product.name, `${product.salt} (0 Mg)`, product.uses),
-      synopsis: buildSynopsis({
-        composition: `${product.salt} (0 Mg)`,
-        brand: product.brand,
-        keyUses: product.uses,
-        form: product.form
-      }),
-      manufacturerDetails: {
-        address: "6th floor, Urmi Corporate Park Solaris, Saki Vihar Road, Andheri East, Mumbai 400072",
-        country: "India",
-        expiry: "August 2026",
-        supportEmail: "support@truemeds.in",
-        supportPhone: "9240250346"
-      },
-      certifiedContent: {
-        writtenBy: "Dr. Nikhil Sharma",
-        writtenRole: "Medical Content Writer | 5 years M.S Orthopaedics",
-        reviewedBy: "Dr. Mandeep Chadha",
-        reviewedRole: "Lead Medical Content Reviewer | 12 years MBBS, DNB (OBGY)"
-      },
-      rails: {
-        related: relatedPool.slice(0, 8),
-        manufacturerMore: relatedPool.filter((entry) => entry.brand === product.brand).slice(0, 8),
-        topSelling: relatedPool.slice(0, 8)
-      },
-      articleLinks: getContextualArticleLinks("General Medicines"),
-      textLinkSections: getContextualTextLinkSections("General Medicines"),
-      disclaimer: [
-        "This page is intended to support product understanding and should not replace professional medical advice.",
-        "Always read the label and use the product according to packaging guidance or doctor recommendation."
-      ]
-    });
-  }
-}
-
-seedStorefrontProducts();
-
-export function getCatalogProductBySlug(slug: string) {
-  return productDetailCache.get(slug) ?? null;
-}
-
 export async function getLiveCatalogProductBySlug(slug: string) {
   try {
     const product = await fetchCatalogProductBySlug(slug);
 
     if (!product) {
-      return getCatalogProductBySlug(slug);
+      return null;
     }
 
-    const fallback = getCatalogProductBySlug(slug);
     const related = product.substitutes.map(railProductFromApi);
-      const manufacturerMore = fallback?.rails.manufacturerMore.filter((entry) => entry.slug !== slug) ?? [];
-      const topSelling = fallback?.rails.topSelling.filter((entry) => entry.slug !== slug) ?? [];
     const brandName = product.brand?.name ?? product.manufacturer ?? "TrueCare";
+    const composition = product.composition || "General care composition";
+    const pack = product.pack_size || "Pack of 1";
+    const form = product.dosage_form || "Product";
+    const keyUses = [
+      `Useful within ${product.category.name.toLowerCase()} care.`,
+      "Compare pack, price, and prescription requirement before purchase."
+    ];
+    const quickLinks = [
+      { id: "uses", label: "Uses" },
+      { id: "how-it-works", label: "How it works" },
+      { id: "how-to-use", label: "Directions for use" },
+      { id: "side-effects", label: "Side effects" },
+      { id: "warning-precautions", label: "Warning & precautions" },
+      { id: "interactions", label: "Interactions" },
+      { id: "synopsis", label: "Synopsis" },
+      { id: "useful-tests", label: "Useful diagnostic tests" },
+      { id: "faq", label: "FAQs" },
+      { id: "learn-more", label: "Learn more" }
+    ];
     const warnings = splitTextBlock(product.warnings, [
       "Consult your doctor before using this product if you have an ongoing condition or prescription."
     ]);
@@ -1011,47 +893,33 @@ export async function getLiveCatalogProductBySlug(slug: string) {
       off: discountFromValues(product.mrp, product.sale_price),
       mrp: formatMoney(product.mrp),
       price: formatMoney(product.sale_price),
-      pack: product.pack_size || fallback?.pack || "Pack of 1",
-      form: product.dosage_form || fallback?.form || "Product",
-      pricePerUnit: fallback?.pricePerUnit || `${formatMoney(product.sale_price)}/${(product.dosage_form || "unit").toUpperCase()}`,
-      accent: fallback?.accent ?? "#eff8ff",
+      pack,
+      form,
+      pricePerUnit: `${formatMoney(product.sale_price)}/${form.toUpperCase()}`,
+      accent: "#eff8ff",
       breadcrumbs: [
         { label: "Home", href: "/" },
         { label: "Categories", href: "/categories" },
         { label: product.category.name, href: `/categories/${product.category.slug}` },
         { label: product.name }
       ],
-      composition: product.composition || fallback?.composition || "General care composition",
-      deliveryLabel: fallback?.deliveryLabel || "Tomorrow 10 PM",
-      updatedOn: fallback?.updatedOn,
-      quickLinks: fallback?.quickLinks ?? [
-        { id: "uses", label: "Uses" },
-        { id: "how-it-works", label: "How it works" },
-        { id: "how-to-use", label: "Directions for use" },
-        { id: "side-effects", label: "Side effects" },
-        { id: "warning-precautions", label: "Warning & precautions" },
-        { id: "interactions", label: "Interactions" },
-        { id: "synopsis", label: "Synopsis" },
-        { id: "useful-tests", label: "Useful diagnostic tests" },
-        { id: "faq", label: "FAQs" },
-        { id: "learn-more", label: "Learn more" }
-      ],
-      galleryItems: fallback?.galleryItems ?? buildGalleryItems(product.name, brandName, product.pack_size || "Pack of 1"),
-      coupons: fallback?.coupons ?? buildCoupons(formatMoney(product.sale_price)),
-      assuranceItems: fallback?.assuranceItems ?? [...buildAssuranceItems()],
-      membership: fallback?.membership ?? buildMembership(),
-      highlights: fallback?.highlights ?? description.slice(0, 4),
-      productHighlights: fallback?.productHighlights ?? description.slice(0, 4),
+      composition,
+      deliveryLabel: "Tomorrow 10 PM",
+      updatedOn: undefined,
+      quickLinks,
+      galleryItems: buildGalleryItems(product.name, brandName, pack),
+      coupons: buildCoupons(formatMoney(product.sale_price)),
+      assuranceItems: [...buildAssuranceItems()],
+      membership: buildMembership(),
+      highlights: description.slice(0, 4),
+      productHighlights: description.slice(0, 4),
       description,
-      ingredients: fallback?.ingredients ?? [
-        product.composition || `${brandName} product composition`,
+      ingredients: [
+        composition || `${brandName} product composition`,
         "See the pack label for the complete ingredient list."
       ],
-      keyUses: fallback?.keyUses ?? [
-        `Useful within ${product.category.name.toLowerCase()} care.`,
-        "Compare pack, price, and prescription requirement before purchase."
-      ],
-      howToUse: fallback?.howToUse ?? [
+      keyUses,
+      howToUse: [
         "Use as directed on the label or by your doctor.",
         "Follow the recommended timing and dosage instructions."
       ],
@@ -1062,7 +930,7 @@ export async function getLiveCatalogProductBySlug(slug: string) {
           bullets: [
             `Category: ${product.category.name}`,
             `Brand: ${brandName}`,
-            `Pack size: ${product.pack_size || "See product details"}`,
+            `Pack size: ${pack}`,
             `Prescription required: ${product.requires_prescription ? "Yes" : "No"}`
           ]
         },
@@ -1071,7 +939,7 @@ export async function getLiveCatalogProductBySlug(slug: string) {
           bullets: storageInformation
         }
       ],
-      faqs: fallback?.faqs ?? [
+      faqs: [
         {
           question: `What is ${product.name} used for?`,
           answer: `${product.name} is part of the ${product.category.name.toLowerCase()} catalog and should be reviewed along with its pack details, composition, and prescription requirement before purchase.`
@@ -1084,14 +952,14 @@ export async function getLiveCatalogProductBySlug(slug: string) {
               : "Related alternatives will appear here once substitute products are linked in the catalog."
         }
       ],
-      warningCards: fallback?.warningCards ?? buildWarningCards(warnings, product.name),
-      interactions: fallback?.interactions ?? buildInteractions([
+      warningCards: buildWarningCards(warnings, product.name),
+      interactions: buildInteractions([
         {
           label: "Good to Know",
           bullets: [
             `Category: ${product.category.name}`,
             `Brand: ${brandName}`,
-            `Pack size: ${product.pack_size || "See product details"}`,
+            `Pack size: ${pack}`,
             `Prescription required: ${product.requires_prescription ? "Yes" : "No"}`
           ]
         },
@@ -1100,109 +968,27 @@ export async function getLiveCatalogProductBySlug(slug: string) {
           bullets: storageInformation
         }
       ]),
-      usefulTests:
-        fallback?.usefulTests ??
-        buildUsefulTests(
-          product.name,
-          product.composition || fallback?.composition || "General care composition",
-          fallback?.keyUses ?? [
-            `Useful within ${product.category.name.toLowerCase()} care.`,
-            "Compare pack, price, and prescription requirement before purchase."
-          ]
-        ),
-      synopsis:
-        fallback?.synopsis ??
-        buildSynopsis({
-          composition: product.composition || fallback?.composition || "General care composition",
-          brand: brandName,
-          keyUses:
-            fallback?.keyUses ?? [
-              `Useful within ${product.category.name.toLowerCase()} care.`,
-              "Compare pack, price, and prescription requirement before purchase."
-            ],
-          form: product.dosage_form || fallback?.form || "Product"
-        }),
-      manufacturerDetails: fallback?.manufacturerDetails ?? defaultManufacturerDetails,
-      certifiedContent: fallback?.certifiedContent ?? defaultCertifiedContent,
+      usefulTests: buildUsefulTests(product.name, composition, keyUses),
+      synopsis: buildSynopsis({
+        composition,
+        brand: brandName,
+        keyUses,
+        form
+      }),
+      manufacturerDetails: defaultManufacturerDetails,
+      certifiedContent: defaultCertifiedContent,
       rails: {
         related,
-        manufacturerMore,
-        topSelling
+        manufacturerMore: [],
+        topSelling: []
       },
       articleLinks: getContextualArticleLinks(product.category.name),
       textLinkSections: getContextualTextLinkSections(product.category.name),
-      disclaimer: fallback?.disclaimer ?? [
+      disclaimer: [
         "This product information supports browsing and should not replace professional medical advice or pack instructions."
       ]
     } satisfies CatalogProductDetail;
   } catch {
-    return getCatalogProductBySlug(slug);
+    return null;
   }
-}
-
-export function getFallbackCatalogProduct(slug: string) {
-  return (
-    getCatalogProductBySlug(slug) ?? {
-      slug,
-      name: titleFromSlug(slug),
-        brand: "TrueCare",
-        manufacturer: "TrueCare Health",
-      off: "10% OFF",
-      mrp: "399",
-      price: "359",
-      pack: "Pack of 1",
-      form: "Product",
-      pricePerUnit: "359/UNIT",
-      accent: "#f4f0ff",
-      breadcrumbs: [
-        { label: "Home", href: "/" },
-        { label: "Categories", href: "/categories" },
-        { label: titleFromSlug(slug) }
-      ],
-      composition: "General care composition",
-      deliveryLabel: "Tomorrow 10 PM",
-      quickLinks: [
-        { id: "uses", label: "Uses" },
-        { id: "how-it-works", label: "How it works" },
-        { id: "how-to-use", label: "Directions for use" },
-        { id: "side-effects", label: "Side effects" },
-        { id: "warning-precautions", label: "Warning & precautions" },
-        { id: "interactions", label: "Interactions" },
-        { id: "synopsis", label: "Synopsis" },
-        { id: "useful-tests", label: "Useful diagnostic tests" },
-        { id: "faq", label: "FAQs" },
-        { id: "learn-more", label: "Learn more" }
-      ],
-        galleryItems: buildGalleryItems(titleFromSlug(slug), "TrueCare", "Pack of 1"),
-      coupons: buildCoupons("359"),
-      assuranceItems: [...buildAssuranceItems()],
-      membership: buildMembership(),
-      highlights: ["This is a reusable fallback product detail page.", "The layout stays consistent across the catalog."],
-      productHighlights: ["This is a reusable fallback product detail page.", "The layout stays consistent across the catalog."],
-      description: ["This product page is generated from the shared detail renderer and keeps the same Truemeds-style structure throughout the app."],
-      ingredients: ["See packaging for exact ingredients."],
-      keyUses: ["Use this page to review product details before purchase."],
-      howToUse: ["Follow pack directions."],
-      safetyInformation: ["Read the label before use."],
-      additionalInformation: [{ label: "Good to Know", bullets: ["Shared detail page layout", "Reusable across the storefront"] }],
-      faqs: [{ question: "Why is this page shown?", answer: "This is the reusable fallback view for product detail routes that are not part of the seeded dataset." }],
-      warningCards: buildWarningCards(["Read the label before use."], titleFromSlug(slug)),
-      interactions: ["Consult the product label and a healthcare professional before combining this product with other care routines."],
-      usefulTests: buildUsefulTests(titleFromSlug(slug), "General care composition", ["Use this page to review product details before purchase."]),
-      synopsis: buildSynopsis({
-        composition: "General care composition",
-          brand: "TrueCare",
-          keyUses: ["Use this page to review product details before purchase."],
-          form: "Product"
-        }),
-        manufacturerDetails: defaultManufacturerDetails,
-        certifiedContent: defaultCertifiedContent,
-        rails: emptyRails(),
-      articleLinks: getContextualArticleLinks("General Medicines"),
-      textLinkSections: getContextualTextLinkSections("General Medicines"),
-      disclaimer: [
-        "This fallback page is for catalog continuity and should not replace package instructions or professional guidance."
-      ]
-    } satisfies CatalogProductDetail
-  );
 }
