@@ -517,6 +517,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
                   <strong data-testid="payment-status-summary">
                     {getPaymentStatusLabel(order.payment_method, order.payment_status)}
                   </strong>
+                  <span className={styles.infoBadge} data-testid="payment-status-badge">
+                    {formatOrderStatusLabel(order.payment_status)}
+                  </span>
                   <p>{getPaymentStatusDescription(order)}</p>
                   {isOrderAwaitingPaymentUpdate(order) ? (
                     <p className={styles.helperText} data-testid="order-payment-autorefresh-note">

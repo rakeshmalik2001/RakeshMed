@@ -54,6 +54,9 @@ def _request_ip(request) -> str:
     return request.META.get("REMOTE_ADDR", "unknown")
 
 
+PUBLIC_OTP_LOGIN_ALLOWED_ROLES = {"customer"}
+
+
 def _record_customer_activity_heartbeat(user: User, *, tab_id: str) -> dict[str, object]:
     now = timezone.now()
     counted_seconds = 0
@@ -427,6 +430,20 @@ PERMISSION_MATRIX_DEFAULTS = {
         "medicine_catalog.delete_medicine": PERMISSION_STATE_ALLOWED,
         "medicine_catalog.bulk_upload": PERMISSION_STATE_ALLOWED,
     },
+    "procurement_manager": {
+        "core_access.dashboard_access": PERMISSION_STATE_ALLOWED,
+        "core_access.profile_own": PERMISSION_STATE_ALLOWED,
+        "inventory_warehouse.view_stock": PERMISSION_STATE_ALLOWED,
+        "inventory_warehouse.receive_stock": PERMISSION_STATE_LIMITED,
+        "reports.view_reports": PERMISSION_STATE_LIMITED,
+    },
+    "marketing_manager": {
+        "core_access.dashboard_access": PERMISSION_STATE_ALLOWED,
+        "core_access.profile_own": PERMISSION_STATE_ALLOWED,
+        "medicine_catalog.view_medicines": PERMISSION_STATE_ALLOWED,
+        "orders.view_orders": PERMISSION_STATE_LIMITED,
+        "reports.view_reports": PERMISSION_STATE_ALLOWED,
+    },
     "operations_manager": {
         "core_access.dashboard_access": PERMISSION_STATE_ALLOWED,
         "core_access.profile_own": PERMISSION_STATE_ALLOWED,
@@ -493,6 +510,8 @@ PERMISSION_MATRIX_DEFAULTS = {
     "viewer": {
         "core_access.dashboard_access": PERMISSION_STATE_LIMITED,
         "core_access.profile_own": PERMISSION_STATE_LIMITED,
+        "orders.view_orders": PERMISSION_STATE_LIMITED,
+        "inventory_warehouse.view_stock": PERMISSION_STATE_LIMITED,
         "reports.view_reports": PERMISSION_STATE_LIMITED,
     },
     "security_admin": {
@@ -1180,8 +1199,12 @@ def verify_otp(request):
     otp_request.save(update_fields=["verified_at"])
 
     user_defaults = {
-        "full_name": serializer.validated_data.get("full_name", "").strip(),
+        "full_name": serializer.validated_data.get("full_name", ""),
         "is_phone_verified": True,
+        "role": "customer",
+        "type_of_user": "customer",
+        "account_status": "active",
+        "approval_status": "approved",
     }
     email = serializer.validated_data.get("email")
     if email:
@@ -1193,13 +1216,6 @@ def verify_otp(request):
         if not user.is_phone_verified:
             user.is_phone_verified = True
             updated_fields.append("is_phone_verified")
-        if email and user.email != email:
-            user.email = email
-            updated_fields.append("email")
-        full_name = serializer.validated_data.get("full_name", "").strip()
-        if full_name and user.full_name != full_name:
-            user.full_name = full_name
-            updated_fields.append("full_name")
         if not user.created_by_id:
             user.created_by = user
             updated_fields.append("created_by")
@@ -1220,6 +1236,12 @@ def verify_otp(request):
         if update_fields:
             update_fields.append("updated_at")
             user.save(update_fields=update_fields)
+
+    if purpose == "login" and user.role not in PUBLIC_OTP_LOGIN_ALLOWED_ROLES:
+        return Response(
+            {"detail": "OTP login is only available for customer accounts."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
     if user.approval_status != "approved":
         return Response({"detail": f"Account approval is {user.approval_status}."}, status=status.HTTP_403_FORBIDDEN)

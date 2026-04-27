@@ -1,3 +1,6 @@
+import tempfile
+from pathlib import Path
+
 from .local import *
 
 DATABASES = {
@@ -19,5 +22,5 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver"]
-MEDIA_ROOT = BASE_DIR / "test-media"
+MEDIA_ROOT = Path(tempfile.mkdtemp(prefix="rakeshmed-test-media-"))
 APPROVAL_DOCUMENT_MAX_FILE_SIZE_BYTES = 1024 * 1024

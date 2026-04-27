@@ -4,6 +4,11 @@ import { defineConfig, devices } from "@playwright/test";
 
 const port = process.env.PLAYWRIGHT_PORT ?? "3003";
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${port}`;
+const serverMode = process.env.PLAYWRIGHT_SERVER_MODE ?? "development";
+const serverCommand =
+  serverMode === "production"
+    ? `node ../../node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port ${port}`
+    : `node ../../node_modules/next/dist/bin/next dev --hostname 127.0.0.1 --port ${port}`;
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -19,7 +24,7 @@ export default defineConfig({
     video: "retain-on-failure"
   },
   webServer: {
-    command: `node ../../node_modules/next/dist/bin/next dev --hostname 127.0.0.1 --port ${port}`,
+    command: serverCommand,
     cwd: path.resolve(__dirname),
     url: baseURL,
     timeout: 120_000,
