@@ -107,6 +107,37 @@ class PrescriptionNotificationFlowTests(TestCase):
         self.assertEqual(prescription.status, "clarification_required")
         queue_notifications.assert_called_once_with(prescription=prescription)
 
+    def test_approval_clears_previous_clarification_message(self) -> None:
+        prescription = Prescription.objects.create(
+            user=self.customer,
+            reference_code="RX-CLEAR-1234",
+            patient_name="Rahul",
+            doctor_name="Dr. Sharma",
+            uploaded_file_name="rx.png",
+            uploaded_file_type="image/png",
+            storage_key="prescriptions/rx.png",
+            uploaded_file_size_bytes=128,
+            status="clarification_required",
+            clarification_message="Please upload a clearer image.",
+        )
+        self.client.force_authenticate(self.pharmacist)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            with patch("platform_apps.prescriptions.views.queue_prescription_review_notifications"):
+                response = self.client.post(
+                    f"/api/v1/prescriptions/pharmacist/queue/{prescription.reference_code}/review/",
+                    {
+                        "decision": "approved",
+                        "notes": "Image is now clear.",
+                    },
+                    format="json",
+                )
+
+        self.assertEqual(response.status_code, 200, response.data)
+        prescription.refresh_from_db()
+        self.assertEqual(prescription.status, "approved")
+        self.assertEqual(prescription.clarification_message, "")
+
     def test_customer_cannot_open_pharmacist_queue(self) -> None:
         self.client.force_authenticate(self.customer)
 

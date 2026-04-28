@@ -143,6 +143,8 @@ def review_prescription(request, reference_code: str):
         prescription.clarification_message = clarification_message or notes
     elif clarification_message:
         prescription.clarification_message = clarification_message
+    else:
+        prescription.clarification_message = ""
     prescription.save(
         update_fields=["status", "reviewed_by", "reviewed_at", "clarification_message", "updated_at"]
     )
