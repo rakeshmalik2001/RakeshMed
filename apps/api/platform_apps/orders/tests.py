@@ -58,6 +58,14 @@ class OrderAdminPermissionTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
+    def test_admin_reconciliation_rejects_invalid_from_datetime(self) -> None:
+        self.client.force_authenticate(self.finance_user)
+
+        response = self.client.get("/api/v1/orders/admin-reconciliation/?from=not-a-date")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Enter a valid ISO 8601 datetime.", str(response.data["from"]))
+
 
 class OrderIdempotencyTests(TestCase):
     def setUp(self) -> None:

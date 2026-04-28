@@ -5,6 +5,7 @@ from django.db.models import Count, Sum
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import generics, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
@@ -898,8 +899,14 @@ class AdminPaymentAttemptListView(generics.ListAPIView):
 def parse_date_range_params(request):
     from_value = request.query_params.get("from", "").strip()
     to_value = request.query_params.get("to", "").strip()
-    period_start = timezone.datetime.fromisoformat(from_value) if from_value else None
-    period_end = timezone.datetime.fromisoformat(to_value) if to_value else None
+    try:
+        period_start = timezone.datetime.fromisoformat(from_value) if from_value else None
+    except ValueError as exc:
+        raise ValidationError({"from": "Enter a valid ISO 8601 datetime."}) from exc
+    try:
+        period_end = timezone.datetime.fromisoformat(to_value) if to_value else None
+    except ValueError as exc:
+        raise ValidationError({"to": "Enter a valid ISO 8601 datetime."}) from exc
     if period_start and timezone.is_naive(period_start):
         period_start = timezone.make_aware(period_start, timezone.get_current_timezone())
     if period_end and timezone.is_naive(period_end):
