@@ -1,0 +1,8 @@
+from django.urls import path
+
+from .web_views import CustomerDashboardView
+
+
+urlpatterns = [
+    path("dashboard/", CustomerDashboardView.as_view(), name="customer-dashboard"),
+]

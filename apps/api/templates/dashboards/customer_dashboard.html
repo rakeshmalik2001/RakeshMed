@@ -1,0 +1,338 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Customer Portal Dashboard | RakeshMed{% endblock %}
+
+{% block extra_head %}
+<style>
+    .customer-hero {
+        background:
+            radial-gradient(circle at top right, rgba(255, 123, 84, 0.18), transparent 28%),
+            linear-gradient(135deg, #153243 0%, #1f7a8c 100%);
+        color: #fff;
+    }
+    .customer-hero .brand-pill {
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.18);
+        color: #fff;
+    }
+    .section-kicker {
+        font-size: .75rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--portal-accent);
+        font-weight: 700;
+    }
+    .hero-actions-grid,
+    .snapshot-grid,
+    .collection-grid {
+        display: grid;
+        gap: 1rem;
+    }
+    .hero-actions-grid,
+    .snapshot-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .collection-grid {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+    .action-tile,
+    .snapshot-card,
+    .collection-card,
+    .list-shell {
+        border: 1px solid var(--portal-line);
+        border-radius: 1rem;
+        background: #fff;
+    }
+    .action-tile,
+    .snapshot-card,
+    .collection-card {
+        padding: 1rem 1.1rem;
+    }
+    .action-tile {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        text-decoration: none;
+        color: var(--portal-ink);
+    }
+    .action-tile:hover {
+        border-color: rgba(31, 122, 140, 0.28);
+        box-shadow: 0 .85rem 1.5rem rgba(21, 50, 67, 0.08);
+    }
+    .snapshot-card {
+        background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(238,246,251,.75) 100%);
+    }
+    .snapshot-card .value {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        margin: .55rem 0 .4rem;
+    }
+    .collection-card h3,
+    .list-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: .35rem;
+    }
+    .list-shell {
+        overflow: hidden;
+    }
+    .list-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.1rem;
+        border-top: 1px solid var(--portal-line);
+    }
+    .list-row:first-child {
+        border-top: 0;
+    }
+    .list-meta {
+        color: #667785;
+        font-size: .92rem;
+        line-height: 1.45;
+    }
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .35rem .75rem;
+        border-radius: 999px;
+        font-size: .78rem;
+        font-weight: 700;
+        background: rgba(31, 122, 140, 0.1);
+        color: var(--portal-accent);
+        text-transform: capitalize;
+        white-space: nowrap;
+    }
+    .status-pill.warning {
+        background: rgba(255, 123, 84, 0.12);
+        color: #b45532;
+    }
+    .status-pill.success {
+        background: rgba(24, 160, 166, 0.12);
+        color: #14757a;
+    }
+    .status-pill.muted {
+        background: rgba(21, 50, 67, 0.08);
+        color: #526572;
+    }
+    .empty-state {
+        border: 1px dashed var(--portal-line);
+        border-radius: 1rem;
+        padding: 1rem 1.1rem;
+        color: #667785;
+        background: rgba(238, 246, 251, 0.55);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="portal-shell">
+    <section class="container-fluid px-3 px-md-4 py-4 py-lg-5">
+        <div class="dashboard-card p-4 p-lg-5 customer-hero mb-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-4">
+                <div>
+                    <span class="brand-pill mb-3"><i class="bi bi-person-heart"></i> Customer Portal</span>
+                    <h1 class="display-6 fw-bold mb-3">Your backend account dashboard</h1>
+                    <p class="mb-0 text-white-50">
+                        This backend page gives support-style visibility into your recent orders, prescriptions,
+                        addresses, payment methods, and notifications. Customer shopping still continues in the main app.
+                    </p>
+                </div>
+                <div class="hero-actions-grid w-100" style="max-width: 420px;">
+                    {% for action in quick_actions %}
+                    <a class="action-tile" href="{{ action.url }}">
+                        <div>
+                            <div class="section-kicker">{{ action.icon }}</div>
+                            <strong class="d-block mt-1">{{ action.label }}</strong>
+                        </div>
+                        <i class="bi bi-arrow-up-right"></i>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <section class="snapshot-grid mb-4">
+            {% for metric in metrics %}
+            <article class="snapshot-card">
+                <div class="section-kicker">{{ metric.label }}</div>
+                <div class="value">{{ metric.value }}</div>
+            </article>
+            {% endfor %}
+        </section>
+
+        <section class="snapshot-grid mb-4">
+            {% for item in order_status_summary %}
+            <article class="snapshot-card">
+                <div class="section-kicker">Order status</div>
+                <div class="value">{{ item.value }}</div>
+                <div class="list-meta">{{ item.label }}</div>
+            </article>
+            {% endfor %}
+        </section>
+
+        <section class="collection-grid mb-4">
+            <article class="collection-card">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <div class="section-kicker">Recent orders</div>
+                        <h3>Latest medicine orders</h3>
+                    </div>
+                    <span class="status-pill muted">{{ recent_orders|length }}</span>
+                </div>
+                <div class="list-shell">
+                    {% for order in recent_orders %}
+                    <div class="list-row">
+                        <div>
+                            <div class="list-title">{{ order.order_number }}</div>
+                            <div class="list-meta">{{ order.created_at|date:"d M Y, H:i" }}</div>
+                            <div class="list-meta">Total: ₹{{ order.total }}</div>
+                        </div>
+                        <span class="status-pill {% if order.status == 'cancelled' %}warning{% else %}success{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">No orders are available on this backend customer page yet.</div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="collection-card">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <div class="section-kicker">Prescriptions</div>
+                        <h3>Recent prescription activity</h3>
+                    </div>
+                    <span class="status-pill muted">{{ recent_prescriptions|length }}</span>
+                </div>
+                <div class="list-shell">
+                    {% for prescription in recent_prescriptions %}
+                    <div class="list-row">
+                        <div>
+                            <div class="list-title">{{ prescription.reference_code }}</div>
+                            <div class="list-meta">{{ prescription.patient_name }}</div>
+                            <div class="list-meta">{{ prescription.created_at|date:"d M Y, H:i" }}</div>
+                        </div>
+                        <span class="status-pill {% if prescription.status == 'approved' %}success{% elif prescription.status == 'rejected' %}warning{% else %}muted{% endif %}">
+                            {{ prescription.get_status_display }}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">No prescription records are available yet.</div>
+                    {% endfor %}
+                </div>
+            </article>
+        </section>
+
+        <section class="collection-grid mb-4">
+            <article class="collection-card">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <div class="section-kicker">Addresses</div>
+                        <h3>Saved delivery addresses</h3>
+                    </div>
+                    <span class="status-pill muted">{{ addresses|length }}</span>
+                </div>
+                <div class="list-shell">
+                    {% for address in addresses %}
+                    <div class="list-row">
+                        <div>
+                            <div class="list-title">{{ address.label }}</div>
+                            <div class="list-meta">{{ address.recipient }}</div>
+                            <div class="list-meta">{{ address.line1 }}, {{ address.city }}, {{ address.pincode }}</div>
+                        </div>
+                        <span class="status-pill {% if address.is_default %}success{% else %}muted{% endif %}">
+                            {% if address.is_default %}Default{% else %}Saved{% endif %}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">No saved addresses were found.</div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="collection-card">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <div class="section-kicker">Payments</div>
+                        <h3>Saved payment methods</h3>
+                    </div>
+                    <span class="status-pill muted">{{ payment_methods|length }}</span>
+                </div>
+                <div class="list-shell">
+                    {% for method in payment_methods %}
+                    <div class="list-row">
+                        <div>
+                            <div class="list-title">{{ method.label }}</div>
+                            <div class="list-meta">{{ method.method_type }}</div>
+                            <div class="list-meta">{{ method.masked_details }}</div>
+                        </div>
+                        <span class="status-pill {% if method.is_default %}success{% else %}muted{% endif %}">
+                            {% if method.is_default %}Default{% else %}Active{% endif %}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">No active payment methods are saved.</div>
+                    {% endfor %}
+                </div>
+            </article>
+        </section>
+
+        <section class="collection-grid">
+            <article class="collection-card">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <div class="section-kicker">Notifications</div>
+                        <h3>Recent account alerts</h3>
+                    </div>
+                    <span class="status-pill muted">{{ notifications|length }}</span>
+                </div>
+                <div class="list-shell">
+                    {% for notification in notifications %}
+                    <div class="list-row">
+                        <div>
+                            <div class="list-title">{{ notification.title }}</div>
+                            <div class="list-meta">{{ notification.body|truncatechars:120 }}</div>
+                            <div class="list-meta">{{ notification.created_at|date:"d M Y, H:i" }}</div>
+                        </div>
+                        <span class="status-pill {% if notification.is_read %}muted{% else %}warning{% endif %}">
+                            {% if notification.is_read %}Read{% else %}Unread{% endif %}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">No recent notifications were found.</div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="collection-card">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <div class="section-kicker">Catalog</div>
+                        <h3>Recent medicine highlights</h3>
+                    </div>
+                    <span class="status-pill muted">{{ catalog_highlights|length }}</span>
+                </div>
+                <div class="list-shell">
+                    {% for product in catalog_highlights %}
+                    <div class="list-row">
+                        <div>
+                            <div class="list-title">{{ product.name }}</div>
+                            <div class="list-meta">{{ product.manufacturer|default:"Manufacturer unavailable" }}</div>
+                            <div class="list-meta">₹{{ product.sale_price }} {% if product.requires_prescription %}| Prescription required{% endif %}</div>
+                        </div>
+                        <span class="status-pill success">Live</span>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">No highlighted products are available right now.</div>
+                    {% endfor %}
+                </div>
+            </article>
+        </section>
+    </section>
+</div>
+{% endblock %}

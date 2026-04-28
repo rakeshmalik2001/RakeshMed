@@ -18,6 +18,7 @@ from rest_framework.test import APIClient
 
 from platform_apps.audit.models import AuditLog
 from platform_apps.notifications.models import Notification
+from platform_apps.prescriptions.models import Prescription
 
 from .admin import UserAdmin
 from .forms import UserManagementForm
@@ -633,6 +634,76 @@ class PermissionMatrixSectionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertJSONEqual(response.content, {"status": "ok", "message": "Permission matrix updated successfully."})
         self.assertEqual(matrix.matrix_permissions["reports.view_reports"], "allowed")
+
+
+class SuperAdminAppointmentsSectionTests(TestCase):
+    def setUp(self) -> None:
+        self.super_admin = User.objects.create_user(
+            phone_number="9000000975",
+            email="appointments-super-admin@example.com",
+            password="testpass123",
+            role="super_admin",
+            account_status="active",
+            approval_status="approved",
+            is_staff=True,
+            is_superuser=True,
+        )
+        self.reviewer = User.objects.create_user(
+            phone_number="9000000976",
+            email="appointments-reviewer@example.com",
+            password="testpass123",
+            full_name="Reviewer One",
+            role="admin",
+            account_status="active",
+            approval_status="approved",
+            is_staff=True,
+            approval_specialty="vendor",
+        )
+        self.customer = User.objects.create_user(
+            phone_number="9000000977",
+            email="appointments-customer@example.com",
+            password="testpass123",
+            full_name="Patient One",
+            role="customer",
+            account_status="active",
+            approval_status="approved",
+        )
+        Prescription.objects.create(
+            user=self.customer,
+            reference_code="RX-APPT-001",
+            patient_name="Patient One",
+            doctor_name="Dr. Sharma",
+            uploaded_file_name="rx-1.png",
+            uploaded_file_type="image/png",
+            storage_key="prescriptions/rx-1.png",
+            uploaded_file_size_bytes=128,
+            status="clarification_required",
+            review_priority="urgent",
+        )
+        Prescription.objects.create(
+            user=self.customer,
+            reference_code="RX-APPT-002",
+            patient_name="Patient Two",
+            doctor_name="Dr. Rao",
+            uploaded_file_name="rx-2.png",
+            uploaded_file_type="image/png",
+            storage_key="prescriptions/rx-2.png",
+            uploaded_file_size_bytes=256,
+            status="pending_review",
+        )
+        self.client = Client()
+        self.client.force_login(self.super_admin)
+
+    def test_appointments_section_renders_live_coordination_content(self) -> None:
+        response = self.client.get(reverse("super-admin-section", kwargs={"section_slug": "appointments"}))
+
+        content = response.content.decode()
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Clinical coordination queue", content)
+        self.assertIn("Doctor-linked follow-up cases", content)
+        self.assertIn("Dr. Sharma", content)
+        self.assertIn("Reviewer coverage", content)
+        self.assertNotIn("No appointment module is wired yet", content)
 
 
 class AuthSecurityTests(TestCase):

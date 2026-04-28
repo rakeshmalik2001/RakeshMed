@@ -1773,9 +1773,10 @@ def managed_file_download(request, file_id: int):
 
 urlpatterns = [
     path("", api_root),
-    path("", include("platform_apps.users.web_urls")),
-    path("auditor/", include("platform_apps.users.auditor_urls")),
-    path("catalog/", include("platform_apps.users.catalog_urls")),
+path("", include("platform_apps.users.web_urls")),
+path("customer/", include("platform_apps.users.customer_urls")),
+path("auditor/", include("platform_apps.users.auditor_urls")),
+path("catalog/", include("platform_apps.users.catalog_urls")),
     path("compliance/", include("platform_apps.users.compliance_urls")),
     path("doctor/", include("platform_apps.users.doctor_urls")),
     path("marketing/", include("platform_apps.users.marketing_urls")),

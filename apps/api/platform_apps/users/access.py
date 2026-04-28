@@ -45,6 +45,15 @@ ACCOUNT_STATUS_BLOCKED = "blocked"
 ACCOUNT_STATUS_SUSPENDED = "suspended"
 
 DASHBOARD_CONTENT = {
+    "customer": {
+        "title": "Customer Portal Dashboard",
+        "subtitle": "Review your orders, prescriptions, addresses, and saved payments from the backend portal surface.",
+        "modules": [
+            {"title": "Order Snapshot", "text": "Track recent medicine orders and understand current status without leaving the portal."},
+            {"title": "Prescription Records", "text": "Review submitted prescriptions, clarifications, and recent approvals in one place."},
+            {"title": "Account Shortcuts", "text": "See saved addresses, active payment methods, and notifications alongside quick links to the main customer app."},
+        ],
+    },
     "pharmacist": {
         "title": "Pharmacist Dashboard",
         "subtitle": "Manage prescription verification, queue health, and customer clarifications.",

@@ -3904,6 +3904,120 @@
                     </div>
 
                 </div>
+            {% elif section_slug == "appointments" %}
+                <div class="content-grid">
+                    <section class="card-shell surface">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Coordination snapshot</div>
+                                <h2>Clinical coordination queue</h2>
+                            </div>
+                        </div>
+                        <div class="panel-shell">
+                            {% for card in appointment_cards %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="panel-title">{{ card.label }}</div>
+                                        <div class="meta">{{ card.hint }}</div>
+                                    </div>
+                                    <span class="status-pill">{{ card.value }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="empty-state">No coordination metrics are available yet.</div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section class="card-shell surface">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Action shortcuts</div>
+                                <h2>Coordinator tools</h2>
+                            </div>
+                        </div>
+                        <div class="panel-shell">
+                            {% for action in appointment_actions %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="panel-title">{{ action.label }}</div>
+                                        <div class="meta">{{ action.text }}</div>
+                                    </div>
+                                    <a href="{{ action.url }}" class="status-pill">Open</a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section class="card-shell surface">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Worklist</div>
+                                <h2>Doctor-linked follow-up cases</h2>
+                            </div>
+                        </div>
+                        <div class="panel-shell">
+                            {% for prescription in appointment_worklist %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="panel-title">{{ prescription.reference_code }} - {{ prescription.patient_name }}</div>
+                                        <div class="meta">{{ prescription.coordination_owner }}</div>
+                                        <div class="meta">{{ prescription.coordination_eta_label }} · {{ prescription.updated_at|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if prescription.status == 'clarification_required' or prescription.status == 'pending_review' %}warning{% elif prescription.status == 'rejected' %}danger{% else %}success{% endif %}">
+                                        {{ prescription.get_status_display }}
+                                    </span>
+                                </div>
+                            {% empty %}
+                                <div class="empty-state">No live coordination cases are waiting right now.</div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section class="card-shell surface">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Doctor handoffs</div>
+                                <h2>Clinical touchpoints by doctor</h2>
+                            </div>
+                        </div>
+                        <div class="panel-shell">
+                            {% for handoff in appointment_doctor_handoffs %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="panel-title">{{ handoff.doctor_name }}</div>
+                                        <div class="meta">{{ handoff.case_total }} total cases · {{ handoff.latest_activity|date:"d M Y, H:i" }}</div>
+                                    </div>
+                                    <span class="status-pill {% if handoff.pending_total %}warning{% else %}success{% endif %}">{{ handoff.pending_total }} open</span>
+                                </div>
+                            {% empty %}
+                                <div class="empty-state">No doctor-linked prescription handoffs have been recorded yet.</div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section class="card-shell surface">
+                        <div class="section-header">
+                            <div>
+                                <div class="card-kicker">Reviewer coverage</div>
+                                <h2>Who can absorb clinical follow-up</h2>
+                            </div>
+                        </div>
+                        <div class="panel-shell">
+                            {% for reviewer in appointment_reviewer_coverage %}
+                                <div class="panel-row">
+                                    <div>
+                                        <div class="panel-title">{{ reviewer.full_name|default:reviewer.phone_number }}</div>
+                                        <div class="meta">{{ reviewer.get_role_display }} - {{ reviewer.get_approval_specialty_display }}</div>
+                                        <div class="meta">Pending {{ reviewer.pending_assigned_total }} / Overdue {{ reviewer.overdue_assigned_total }}</div>
+                                    </div>
+                                    <span class="status-pill {% if reviewer.reviewer_status_label != 'Available' %}warning{% else %}success{% endif %}">{{ reviewer.reviewer_status_label }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="empty-state">Reviewer coverage is not configured yet.</div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
             {% elif section_slug == "analytics" %}
                 <div class="analytics-grid">
                     <section class="card-shell surface chart-card">

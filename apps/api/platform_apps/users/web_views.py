@@ -13,7 +13,7 @@ from django.contrib.auth.views import PasswordResetCompleteView, PasswordResetCo
 from django.core.mail import send_mail
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Max, Q, Sum
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
@@ -440,12 +440,6 @@ class CustomerDashboardView(DashboardBaseView):
     allowed_roles = ("customer",)
     role_key = "customer"
     template_name = "dashboards/customer_dashboard.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        if getattr(request.user, "role", "") == "customer":
-            return redirect(resolve_dashboard_url(request.user))
-        return response
 
     def get_dashboard_metrics(self):
         return [
@@ -1565,11 +1559,10 @@ class SuperAdminDashboardView(DashboardBaseView):
         },
         "appointments": {
             "title": "Appointments",
-            "subtitle": "Appointment management surface ready for a dedicated scheduling module.",
-            "summary": "This page is prepared for future appointment scheduling, care coordination, and doctor calendar workflows.",
-            "metric_keys": [],
+            "subtitle": "Care coordination visibility built from live prescription, reviewer, and doctor handoff signals.",
+            "summary": "Track follow-up pressure, doctor-linked prescription work, and reviewer coverage until a dedicated scheduling module is introduced.",
+            "metric_keys": ["appointment_snapshot", "prescription_snapshot", "operations_snapshot"],
             "table": None,
-            "empty_state": "No appointment module is wired yet. The navigation is now a real page and ready for appointment data when that module exists.",
         },
         "analytics": {
             "title": "Analytics",
@@ -1997,6 +1990,12 @@ class SuperAdminDashboardView(DashboardBaseView):
                     {"label": "Urgent queue", "value": Prescription.objects.filter(status="pending_review", review_priority="urgent").count(), "hint": "Most time-sensitive clinical work."},
                     {"label": "Clarifications", "value": Prescription.objects.filter(status="clarification_required").count(), "hint": "Customer follow-up still needed."},
                     {"label": "Approved today", "value": Prescription.objects.filter(status="approved", updated_at__date=today).count(), "hint": "Clinical throughput since midnight."},
+                ],
+                "appointment_snapshot": [
+                    {"label": "Doctor-linked prescriptions", "value": Prescription.objects.exclude(doctor_name__exact="").count(), "hint": "Clinical records that can be routed back to a named doctor."},
+                    {"label": "Follow-up required", "value": Prescription.objects.filter(status="clarification_required").count(), "hint": "Cases waiting on customer or clinic clarification."},
+                    {"label": "Urgent clinical queue", "value": Prescription.objects.filter(status="pending_review", review_priority="urgent").count(), "hint": "Time-sensitive work that needs coordinator attention."},
+                    {"label": "Reviewed today", "value": Prescription.objects.filter(reviewed_at__date=today).count(), "hint": "Clinical decisions completed since midnight."},
                 ],
                 "financial_snapshot": [
                     {"label": "Payment attempts pending", "value": PaymentAttempt.objects.filter(status__in=["created", "pending"]).count(), "hint": "Gateway sessions not yet settled."},
@@ -3003,6 +3002,42 @@ class SuperAdminSectionView(SuperAdminDashboardView):
                 "limited": limited_cells,
                 "denied": denied_cells,
             }
+        elif section_slug == "appointments":
+            appointment_worklist = list(
+                Prescription.objects.filter(Q(status__in=["pending_review", "clarification_required"]) | ~Q(doctor_name=""))
+                .select_related("user", "reviewed_by")
+                .order_by("-updated_at")[:8]
+            )
+            for prescription in appointment_worklist:
+                prescription.coordination_owner = prescription.doctor_name or "Coordinator follow-up"
+                prescription.coordination_eta_label = f"{prescription.review_eta_hours}h review SLA"
+
+            doctor_handoffs = list(
+                Prescription.objects.exclude(doctor_name__exact="")
+                .values("doctor_name")
+                .annotate(
+                    case_total=Count("id"),
+                    pending_total=Count("id", filter=Q(status__in=["pending_review", "clarification_required"])),
+                    latest_activity=Max("updated_at"),
+                )
+                .order_by("-pending_total", "-latest_activity", "doctor_name")[:6]
+            )
+            reviewer_coverage = list(context.get("staff_coverage", []))[:5]
+            appointment_actions = [
+                {"label": "Approval queue", "url": "/admin/approval-queue/", "text": "Clear new partner reviews that can block downstream care coordination."},
+                {"label": "Reviewer schedules", "url": "/admin/reviewer-schedules/", "text": "Adjust reviewer availability before clinical queues slip behind SLA."},
+                {"label": "Prescription API queue", "url": "/api/v1/prescriptions/pharmacist/queue/", "text": "Open the active pharmacist queue for live clinical review work."},
+                {"label": "Notifications", "url": "/api/v1/notifications/", "text": "Check live alert traffic tied to coordination and fulfillment pressure."},
+            ]
+            context.update(
+                {
+                    "appointment_cards": context.get("appointment_snapshot", []),
+                    "appointment_worklist": appointment_worklist,
+                    "appointment_doctor_handoffs": doctor_handoffs,
+                    "appointment_reviewer_coverage": reviewer_coverage,
+                    "appointment_actions": appointment_actions,
+                }
+            )
 
         context.update(
             {
