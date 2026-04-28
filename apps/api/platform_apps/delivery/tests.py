@@ -4,6 +4,8 @@ from django.core.cache import cache
 from django.test import TestCase
 from rest_framework.test import APIClient
 
+from platform_apps.delivery.models import DeliveryShipment
+from platform_apps.orders.models import Order
 from platform_apps.users.models import User
 
 
@@ -37,6 +39,47 @@ class DeliveryAdminPermissionTests(TestCase):
         response = self.client.get("/api/v1/delivery/admin/shipments/")
 
         self.assertEqual(response.status_code, 200)
+
+    def test_admin_cannot_mark_blocked_shipment_delivered(self) -> None:
+        admin_user = User.objects.create_user(
+            phone_number="9220000003",
+            password="testpass123",
+            role="admin",
+            is_staff=True,
+            is_phone_verified=True,
+        )
+        order = Order.objects.create(
+            user=self.customer,
+            order_number="TC-DELIVERY-BLOCKED-1",
+            status="placed",
+            payment_method="UPI",
+            payment_status="pending",
+            inventory_status="unreserved",
+            fulfillment_status="queued",
+            recipient="Rakesh",
+            line1="Street 1",
+            city="Mumbai",
+            pincode="400001",
+            subtotal="84.00",
+            discount="4.00",
+            delivery_fee="40.00",
+            total="120.00",
+        )
+        shipment = DeliveryShipment.objects.create(order=order, status="queued")
+        self.client.force_authenticate(admin_user)
+
+        response = self.client.patch(
+            f"/api/v1/delivery/admin/shipments/{order.order_number}/",
+            {"status": "delivered"},
+            format="json",
+        )
+
+        shipment.refresh_from_db()
+        order.refresh_from_db()
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Shipment is blocked:", str(response.data["status"]))
+        self.assertEqual(shipment.status, "queued")
+        self.assertEqual(order.fulfillment_status, "queued")
 
 
 class DeliveryPublicResilienceTests(TestCase):

@@ -284,7 +284,7 @@ def apply_delivery_shipment_update(shipment: DeliveryShipment, *, actor=None, **
     zone = shipment.zone
     blockers = delivery_blockers_for_order(order, zone=zone)
     next_status = validated_data.get("status", shipment.status)
-    if next_status in {"assigned", "picked_up", "in_transit", "out_for_delivery"} and blockers:
+    if next_status in {"assigned", "picked_up", "in_transit", "out_for_delivery", "delivered"} and blockers:
         raise ValidationError({"status": f"Shipment is blocked: {', '.join(blockers)}."})
     for field, value in validated_data.items():
         setattr(shipment, field, value)
