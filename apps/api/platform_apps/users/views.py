@@ -1571,6 +1571,11 @@ class AdminUserBulkActionView(APIView):
     permission_classes = [IsAuthenticated, HasUserPermission]
     required_user_permission = "update"
 
+    def get_permissions(self):
+        action = (self.request.data.get("action") or "").strip() if hasattr(self.request, "data") else ""
+        self.required_user_permission = "export" if action == "export" else "update"
+        return super().get_permissions()
+
     def post(self, request):
         action = (request.data.get("action") or "").strip()
         ids = request.data.get("user_ids") or []
@@ -1632,6 +1637,9 @@ class AdminUserLockToggleView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk, action):
+        action = (action or "").strip().lower()
+        if action not in {"lock", "unlock"}:
+            return Response({"detail": "Unsupported lock action."}, status=status.HTTP_400_BAD_REQUEST)
         permissions = resolve_user_permissions(request.user)
         required = "lock" if action == "lock" else "unlock"
         if not permissions.get(required, False):

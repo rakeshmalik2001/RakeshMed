@@ -160,6 +160,55 @@ class EmployeeCodeWorkflowTests(TestCase):
         self.assertEqual(district_response.status_code, 200)
         self.assertTrue(len(district_response.data["districts"]) > 0)
 
+    def test_user_bulk_action_export_uses_export_permission_not_update(self) -> None:
+        export_user = User.objects.create_user(
+            phone_number="9000000417",
+            email="export-only-warehouse@example.com",
+            password="testpass123",
+            role="warehouse_operator",
+            approval_status="approved",
+            account_status="active",
+        )
+        target_user = User.objects.create_user(
+            phone_number="9000000418",
+            email="bulk-export-target@example.com",
+            password="testpass123",
+            role="customer",
+            approval_status="approved",
+            account_status="active",
+        )
+        self.client.force_authenticate(user=export_user)
+
+        response = self.client.post(
+            "/api/v1/auth/admin/users/bulk-actions/",
+            {"action": "export", "user_ids": [target_user.pk]},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/vnd.ms-excel")
+        self.assertIn("bulk-export-target@example.com", response.content.decode())
+
+    def test_admin_user_lock_toggle_rejects_unknown_action(self) -> None:
+        target_user = User.objects.create_user(
+            phone_number="9000000419",
+            email="lock-toggle-target@example.com",
+            password="testpass123",
+            role="customer",
+            approval_status="approved",
+            account_status="active",
+            account_locked=True,
+            failed_login_attempts=3,
+        )
+
+        response = self.client.post(f"/api/v1/auth/admin/users/{target_user.pk}/reopen/")
+
+        target_user.refresh_from_db()
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data["detail"], "Unsupported lock action.")
+        self.assertTrue(target_user.account_locked)
+        self.assertEqual(target_user.failed_login_attempts, 3)
+
     @override_settings(BACKEND_BASE_URL="http://testserver", DEFAULT_FROM_EMAIL="security@example.com")
     def test_admin_reset_password_endpoint_sends_reset_link_instead_of_plaintext_password(self) -> None:
         target_user = User.objects.create_user(
