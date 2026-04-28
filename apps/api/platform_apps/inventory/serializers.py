@@ -145,25 +145,44 @@ class InventoryAdjustmentSerializer(serializers.Serializer):
         movement_type = validated_data.pop("movement_type", "adjustment")
 
         with transaction.atomic():
-            inventory_item, _created = InventoryItem.objects.get_or_create(
-                product=instance,
-                location=location,
-                defaults={"quantity_on_hand": 0, "reserved_quantity": 0, "inbound_quantity": 0},
+            inventory_item = (
+                InventoryItem.objects.select_for_update()
+                .filter(product=instance, location=location)
+                .first()
             )
+            previous_quantity = inventory_item.quantity_on_hand if inventory_item else 0
+            next_quantity_on_hand = previous_quantity
+            next_reserved_quantity = inventory_item.reserved_quantity if inventory_item else 0
+            next_inbound_quantity = inventory_item.inbound_quantity if inventory_item else 0
 
-            previous_quantity = inventory_item.quantity_on_hand
             if quantity_on_hand is not None:
-                inventory_item.quantity_on_hand = quantity_on_hand
+                next_quantity_on_hand = quantity_on_hand
             elif quantity_delta is not None:
-                inventory_item.quantity_on_hand = inventory_item.quantity_on_hand + quantity_delta
+                next_quantity_on_hand = previous_quantity + quantity_delta
+
+            if next_quantity_on_hand < 0:
+                raise serializers.ValidationError({"quantity_on_hand": "Quantity on hand cannot be negative."})
 
             if reserved_quantity is not None:
-                inventory_item.reserved_quantity = reserved_quantity
+                next_reserved_quantity = reserved_quantity
             if inbound_quantity is not None:
-                inventory_item.inbound_quantity = inbound_quantity
+                next_inbound_quantity = inbound_quantity
 
-            if inventory_item.reserved_quantity > max(inventory_item.quantity_on_hand + inventory_item.inbound_quantity, 0):
+            if next_reserved_quantity > max(next_quantity_on_hand + next_inbound_quantity, 0):
                 raise serializers.ValidationError({"reserved_quantity": "Reserved quantity cannot exceed available plus inbound stock."})
+
+            if inventory_item is None:
+                inventory_item = InventoryItem(
+                    product=instance,
+                    location=location,
+                    quantity_on_hand=0,
+                    reserved_quantity=0,
+                    inbound_quantity=0,
+                )
+
+            inventory_item.quantity_on_hand = next_quantity_on_hand
+            inventory_item.reserved_quantity = next_reserved_quantity
+            inventory_item.inbound_quantity = next_inbound_quantity
 
             inventory_item.save()
 
